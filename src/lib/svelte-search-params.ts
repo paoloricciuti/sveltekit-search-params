@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { writable } from 'svelte/store';
+import { writable, type Writable } from 'svelte/store';
 import { goto } from '$app/navigation';
 import { page } from '$app/stores';
 
@@ -8,9 +8,17 @@ export type EncodeAndDecodeOptions<T = any> = {
     decode: (value: string) => T;
 };
 
-type Options = Record<string, EncodeAndDecodeOptions>;
+type LooseAutocomplete<T> = {
+    [K in keyof T]: any;
+} & {
+    [K: string]: any;
+};
 
-function mixSearchAndOptions(searchParams: URLSearchParams, options: Options) {
+type Options = {
+    [key: string]: EncodeAndDecodeOptions,
+};
+
+function mixSearchAndOptions<T extends Options>(searchParams: URLSearchParams, options: T): LooseAutocomplete<T> {
     const uniqueKeys = Array.from(
         new Set(Array.from(searchParams?.keys?.() || []).concat(Object.keys(options)))
     );
@@ -23,7 +31,7 @@ function mixSearchAndOptions(searchParams: URLSearchParams, options: Options) {
             const value = searchParams?.get(key) ?? '';
             return [key, fnToCall(value)];
         })
-    );
+    ) as unknown as LooseAutocomplete<T>;
 }
 
 export const ssp: Record<'object' | 'number' | 'boolean', () => EncodeAndDecodeOptions> = {
@@ -41,11 +49,11 @@ export const ssp: Record<'object' | 'number' | 'boolean', () => EncodeAndDecodeO
     })
 };
 
-export function createSearchParamsStore<T extends Options>(options: T) {
-    const { set, subscribe, update } = writable<Record<string & Omit<keyof T, string>, any>>();
+export function createSearchParamsStore<T extends Options>(options: T): Writable<LooseAutocomplete<T>> {
+    const { set, subscribe, update } = writable<LooseAutocomplete<T>>();
     page.subscribe(($page) => {
         set(
-            new Proxy<Record<string & Omit<keyof T, string>, any>>(mixSearchAndOptions($page?.url?.searchParams, options), {
+            new Proxy<LooseAutocomplete<T>>(mixSearchAndOptions($page?.url?.searchParams, options), {
                 set: (_, field, value) => {
                     const query = new URLSearchParams($page.url.searchParams);
                     let fnToCall: EncodeAndDecodeOptions['encode'] = (value) => value.toString();
