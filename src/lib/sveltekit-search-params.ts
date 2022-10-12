@@ -1,10 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { writable, type Readable, type Writable } from 'svelte/store';
+import { writable, type Writable } from 'svelte/store';
+import { goto } from '../@sveltejs/kit/src/runtime/app/navigation.js';
+import { page } from '../@sveltejs/kit/src/runtime/app/stores.js';
 import {
     compressToEncodedURIComponent,
     decompressFromEncodedURIComponent,
 } from "lz-string";
-import type { Page } from '@sveltejs/kit';
 
 export type EncodeAndDecodeOptions<T = any> = {
     encode: (value: T) => string;
@@ -24,8 +25,6 @@ type Options = {
 type ReturnValues<T extends Options> = {
     [K in keyof T]: ReturnType<T[K]['decode']>
 };
-
-type Goto = (url: string | URL, opts?: { replaceState?: boolean; noscroll?: boolean; keepfocus?: boolean; state?: any; }) => Promise<void>;
 
 function mixSearchAndOptions<T extends Options>(searchParams: URLSearchParams, options?: T): LooseAutocomplete<T> {
     const uniqueKeys = Array.from(
@@ -90,7 +89,7 @@ export const ssp = {
     }),
 };
 
-export function createSearchParamsStore<T extends Options>(page: Readable<Page<Record<string, string>>>, goto: Goto, options?: T): Writable<ReturnValues<LooseAutocomplete<T>>> {
+export function createSearchParamsStore<T extends Options>(options?: T): Writable<ReturnValues<LooseAutocomplete<T>>> {
     const { set, subscribe, update } = writable<LooseAutocomplete<T>>();
     page.subscribe(($page) => {
         set(

@@ -1,9 +1,7 @@
 <script lang="ts">
-    import { page } from "$app/stores";
-    import { goto } from "$app/navigation";
     import { ssp, createSearchParamsStore } from "sveltekit-search-params";
 
-    const store = createSearchParamsStore(page, goto, {
+    const store = createSearchParamsStore({
         name: ssp.string(),
         count: ssp.number(),
         bool: ssp.boolean(),
