@@ -1,6 +1,6 @@
 {
 	"name": "sveltekit-search-params",
-	"version": "0.0.2",
+	"version": "0.0.3",
 	"scripts": {
 		"dev": "vite dev",
 		"build": "svelte-kit sync && svelte-package",
@@ -23,12 +23,12 @@
 		"tslib": "^2.3.1",
 		"typescript": "^4.7.4",
 		"vite": "^3.1.0",
-        "lz-string": "^1.4.4"
+		"lz-string": "^1.4.4"
 	},
 	"type": "module",
-    "peerDependencies": {
-        "lz-string": "^1.4.4",
+	"peerDependencies": {
+		"lz-string": "^1.4.4",
 		"svelte": "^3.44.0",
 		"@sveltejs/kit": "next"
-    }
+	}
 }
