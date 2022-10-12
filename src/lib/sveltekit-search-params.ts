@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { writable, type Writable } from 'svelte/store';
-import { goto } from '$app/navigation';
-import { page } from '$app/stores';
+import { goto } from '../@sveltejs/kit/src/runtime/app/navigation.js';
+import { page } from '../@sveltejs/kit/src/runtime/app/stores.js';
 import {
     compressToEncodedURIComponent,
     decompressFromEncodedURIComponent,
