@@ -5,5 +5,5 @@ export {
 } from "./sveltekit-search-params";
 
 export {
-    mergeConfig
-} from "./vite-config-merge.js";
+    sspPlugin
+} from "./vite-plugin-sveltekit-search-params.js";
