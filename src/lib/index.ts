@@ -2,4 +2,4 @@
 export {
     ssp,
     createSearchParamsStore
-} from "./svelte-search-params";
+} from "./sveltekit-search-params";
