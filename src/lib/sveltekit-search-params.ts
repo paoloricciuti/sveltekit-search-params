@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { writable, type Writable } from 'svelte/store';
 import { goto } from '$app/navigation';
@@ -6,6 +7,9 @@ import {
     compressToEncodedURIComponent,
     decompressFromEncodedURIComponent,
 } from "lz-string";
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function noop<T>(value: LooseAutocomplete<T>) { }
 
 export type EncodeAndDecodeOptions<T = any> = {
     encode: (value: T) => string;
@@ -87,30 +91,31 @@ export const ssp = {
 };
 
 export function createSearchParamsStore<T extends Options>(options?: T): Writable<LooseAutocomplete<T>> {
-    const { set, subscribe, update } = writable<LooseAutocomplete<T>>();
+    const { set: _set, subscribe, update } = writable<LooseAutocomplete<T>>();
+    const setRef = { value: noop };
     page.subscribe(($page) => {
-        set(
-            new Proxy<LooseAutocomplete<T>>(mixSearchAndOptions($page?.url?.searchParams, options), {
-                set: (_, field, value) => {
-                    const query = new URLSearchParams($page.url.searchParams);
-                    let fnToCall: EncodeAndDecodeOptions['encode'] = (value) => value.toString();
-                    const optionsKey = options?.[field as string];
-                    if (typeof optionsKey !== "boolean" && typeof optionsKey?.encode === 'function') {
-                        fnToCall = optionsKey.encode;
-                    }
-                    query.set(field as string, fnToCall(value));
-                    goto(`?${query}`, {
-                        keepfocus: true,
-                        noscroll: true
-                    });
-                    return true;
+        _set(mixSearchAndOptions($page?.url?.searchParams, options));
+        setRef.value = (value) => {
+            const query = new URLSearchParams($page.url.searchParams);
+            let fnToCall: EncodeAndDecodeOptions['encode'] = (value) => value.toString();
+            for (const field of Object.keys(value)) {
+                const optionsKey = options?.[field as string];
+                if (typeof optionsKey !== "boolean" && typeof optionsKey?.encode === 'function') {
+                    fnToCall = optionsKey.encode;
                 }
-            })
-        );
+                query.set(field as string, fnToCall(value));
+                goto(`?${query}`, {
+                    keepfocus: true,
+                    noscroll: true
+                });
+            }
+        };
     });
     return {
         // eslint-disable-next-line @typescript-eslint/no-empty-function
-        set: () => { },
+        set: (value) => {
+            setRef.value(value);
+        },
         subscribe,
         update
     };
