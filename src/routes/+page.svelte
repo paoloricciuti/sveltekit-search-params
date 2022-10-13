@@ -1,7 +1,7 @@
 <script lang="ts">
-    import { ssp, createSearchParamsStore } from "sveltekit-search-params";
+    import { ssp, queryParameters, queryParam } from "sveltekit-search-params";
 
-    const store = createSearchParamsStore({
+    const store = queryParameters({
         name: ssp.string(),
         count: ssp.number(),
         bool: ssp.boolean(),
@@ -9,17 +9,18 @@
         arr: ssp.array(),
         lz: ssp.lz(),
     });
+
+    const x = queryParam("x", ssp.lz());
 </script>
 
 Test
 <section>
+    {$x}
+    <input bind:value={$x} />
     <pre>{JSON.stringify($store, null, 2)}</pre>
     <hr />
     <input
-        value={$store.name}
-        on:input={(e) => {
-            $store.name = e.currentTarget.value;
-        }}
+        bind:value={$store.name}
     />
     <hr />
     <input

@@ -9,7 +9,7 @@ import {
 } from "lz-string";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-function noop<T>(value: LooseAutocomplete<T>) { }
+function noop<T>(value: T) { }
 
 export type EncodeAndDecodeOptions<T = any> = {
     encode: (value: T) => string;
@@ -56,7 +56,7 @@ export const ssp = {
         },
     }),
     array: () => ({
-        encode: (value: object) => JSON.stringify(value),
+        encode: (value: any[]) => JSON.stringify(value),
         decode: (value: string | null) => {
             if (value === null) return null;
             try {
@@ -79,40 +79,76 @@ export const ssp = {
         decode: (value: string | null) => value,
     }),
     lz: () => ({
-        encode: (value: object) =>
+        encode: (value: any) =>
             compressToEncodedURIComponent(JSON.stringify(value)),
-        decode: (value: string | null) =>
-            !value
-                ? null
-                : JSON.parse(
+        decode: (value: string | null) => {
+            if (!value) return null;
+            try {
+                return JSON.parse(
                     decompressFromEncodedURIComponent(value) ?? ""
-                ),
+                );
+            } catch (e) {
+                return null;
+            }
+        }
     }),
 };
 
-export function createSearchParamsStore<T extends Options>(options?: T): Writable<LooseAutocomplete<T>> {
+export function queryParameters<T extends Options>(options?: T): Writable<LooseAutocomplete<T>> {
     const { set: _set, subscribe, update } = writable<LooseAutocomplete<T>>();
-    const setRef = { value: noop };
+    const setRef: { value: Writable<T>["set"]; } = { value: noop };
     page.subscribe(($page) => {
         _set(mixSearchAndOptions($page?.url?.searchParams, options));
         setRef.value = (value) => {
             const query = new URLSearchParams($page.url.searchParams);
             for (const field of Object.keys(value)) {
+                if (!value[field]) continue;
                 let fnToCall: EncodeAndDecodeOptions['encode'] = (value) => value.toString();
                 const optionsKey = options?.[field as string];
                 if (typeof optionsKey !== "boolean" && typeof optionsKey?.encode === 'function') {
                     fnToCall = optionsKey.encode;
                 }
                 query.set(field as string, fnToCall(value[field]));
-                goto(`?${query}`, {
-                    keepfocus: true,
-                    noscroll: true
-                });
             }
+            goto(`?${query}`, {
+                keepfocus: true,
+                noscroll: true
+            });
         };
     });
     return {
-        // eslint-disable-next-line @typescript-eslint/no-empty-function
+        set: (value) => {
+            setRef.value(value);
+        },
+        subscribe,
+        update
+    };
+}
+
+const DEFAULT_ENCODER_DECODER: EncodeAndDecodeOptions = {
+    encode: (value) => value.toString(),
+    decode: (value: string | null) => value ? value.toString() : null,
+};
+
+export function queryParam<T = string>(name: string, { encode: encode = DEFAULT_ENCODER_DECODER.encode, decode: decode = DEFAULT_ENCODER_DECODER.decode }: EncodeAndDecodeOptions<T> = DEFAULT_ENCODER_DECODER): Writable<T | null> {
+    const { set: _set, subscribe, update } = writable<T | null>();
+    const setRef: { value: Writable<T | null>["set"]; } = { value: noop };
+    page.subscribe(($page) => {
+        _set(decode($page?.url?.searchParams?.get?.(name)));
+        setRef.value = (value) => {
+            const query = new URLSearchParams($page.url.searchParams);
+            if (value === null) {
+                query.delete(name);
+            } else {
+                query.set(name, encode(value));
+            }
+            goto(`?${query}`, {
+                keepfocus: true,
+                noscroll: true
+            });
+        };
+    });
+    return {
         set: (value) => {
             setRef.value(value);
         },

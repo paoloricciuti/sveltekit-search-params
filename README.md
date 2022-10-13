@@ -60,15 +60,99 @@ export default config;
 
 After that you can start using `sveltekit-search-params`,
 
-### Simple case
+### Simple case (single parameter)
 
-You can use this package to get an object containing all the present search params.
+The simplest and most effective way to use this library is by importing the method `queryParam`. You can invoke this method with a string that represent the search parameters you are looking for in the URL.
 
 ```svelte
 <script lang="ts">
-    import { createSearchParamsStore } from "sveltekit-search-params";
+    import { queryParam } from "sveltekit-search-params";
 
-    const store = createSearchParamsStore();
+    const username = queryParam("username");
+</script>
+
+Your username is {$username}
+```
+
+the function returns a store so make sure to use it with the `$` prepended to handle auto-subscriprion. In case there's not a query parameter with the chosen name it will simply be null.
+
+### Writing to the store (single parameter)
+
+Reading query parameters is cool but you know what is even cooler? Writing query parameters! With this library you can treat your store just like normal state in svelte. To update the state and conseguentely the url you can just do this
+
+```svelte
+<script lang="ts">
+    import { queryParam } from "sveltekit-search-params";
+
+    const username = queryParam("username");
+</script>
+
+Your username is {$username}
+<input bind:value={$username} />
+```
+
+or if you prefer
+
+```svelte
+<script lang="ts">
+    import { queryParam } from "sveltekit-search-params";
+
+    const username = queryParam("username");
+</script>
+
+
+Your username is {$username}
+<input value={$username} on:input={(e)=>{
+    $username = e.target.value;
+}} />
+```
+
+### Encoding and decoding
+
+By default query parameters are strings but more often than not tho we are not working with strings. We are dealing with numbers, boolean, arrays and complex abjects. During the creation of the store you can specify an object containing an encode and a decode property that will be used to transform your data from and to the type you need.
+
+```svelte
+<script lang="ts">
+    import { queryParam } from "sveltekit-search-params";
+
+    const count = queryParam("count", {
+        encode: (value: number) => value.toString(),
+        decode: (value: string | null) => value ? parseInt(value) : null,
+    });
+</script>
+
+The count is {$count}
+<input bind:value={$count} type="number"/>
+```
+
+this time $count would be of type number and the deconding function it's what's used to update the url when you write to the store.
+
+### Helpers encodings and decodings
+
+Write an encode and decode function may seem trivial but it's tedious for sure. `sveltekit-search-params` provide with a set of helpers for better readability and to avoid the hassle of writing common transforms. You can find those helpers exported in a ssp variable from the same package.
+
+```svelte
+<script lang="ts">
+    import { ssp, queryParam } from "sveltekit-search-params";
+
+    const count = queryParam("count", ssp.number());
+</script>
+
+The count is {$count}
+<input bind:value={$count} type="number"/>
+```
+
+this code will produce the same output as the code written above but far more readable and easier to read. You can find all the exports documented in the section [ssp - Helpers](#ssp---helpers)
+
+### Simple case (all parameters)
+
+You can use the function queryParameters to get an object containing all the present search params.
+
+```svelte
+<script lang="ts">
+    import { queryParameters } from "sveltekit-search-params";
+
+    const store = queryParameters();
 </script>
 
 <pre>
@@ -87,15 +171,15 @@ assuming the page is `/?framework=svelte&isCool=true` the above code will show
 
 by default all query parameters are string.
 
-### Writing to the store
+### Writing to the store (all parameters)
 
-Reading query parameters is cool but you know what is even cooler? Writing query parameters! With this library you can treat your store just like normal state in svelte. To update the state and conseguentely the url you can just do this
+Just like with the single parameter case you can just update the store and the URL at the same time by doing this
 
 ```svelte
 <script lang="ts">
-    import { createSearchParamsStore } from "sveltekit-search-params";
+    import { queryParameters } from "sveltekit-search-params";
 
-    const store = createSearchParamsStore();
+    const store = queryParameters();
 </script>
 
 <pre>
@@ -108,19 +192,15 @@ Reading query parameters is cool but you know what is even cooler? Writing query
 
 writing in the input will update the state and the URL at the same time.
 
-> **Note**
->
-> one small caveat is that you can't bind but you have to do things manually. Also if you use the store in other reactive contexts keep in mind that it's the whole store that changes and not just the field you are changing)
-
 ### Expecting some parameters
 
 Most of the times if you need to read from query parameters you are expecting some parameters to be present. You can define the parameters you are expecting during the store creating and those will be merged with the actual query parameters despite the fact that they are present or not.
 
 ```svelte
 <script lang="ts">
-    import { createSearchParamsStore } from "sveltekit-search-params";
+    import { queryParameters } from "sveltekit-search-params";
 
-    const store = createSearchParamsStore({
+    const store = queryParameters({
         username: true,
     });
 </script>
@@ -152,13 +232,13 @@ if we add username to the URL like this `/?framework=svelte&isCool=true&username
 
 ### Encoding and Decoding
 
-More often than not tho we are not working with strings. We are dealing with numbers, boolean, arrays and complex abjects. During the creation of the store you can specify an object containing an encode and a decode property that will be used to transform your data from and to the type you need.
+The parameter passed to `queryParameters` can aslo be used to specify the encoding and decoding just like the `queryParam` method.
 
 ```svelte
 <script lang="ts">
-    import { createSearchParamsStore } from "sveltekit-search-params";
+    import { queryParameters } from "sveltekit-search-params";
 
-    const store = createSearchParamsStore({
+    const store = queryParameters({
         username: true,
         isCool: {
             encode: (booleanValue) => booleanValue.toString(),
@@ -192,17 +272,15 @@ notice that this time isCool it's a boolean and not a string anymore. With this 
 }
 ```
 
-the deconding function it's what's used to update the url when you write to the store.
-
 ### Helpers encodings and decodings
 
-Write an encode and decode function may seem trivial but it's tedious for sure. `sveltekit-search-params` provide with a set of helpers for better readability and to avoid the hassle of writing common transforms. You can find those helpers exported in a ssp variable from the same package.
+Obviously also in this case you can use the helpers functions provided inside `ssp`.
 
 ```svelte
 <script lang="ts">
-    import { ssp, createSearchParamsStore } from "sveltekit-search-params";
+    import { ssp, queryParameters } from "sveltekit-search-params";
 
-    const store = createSearchParamsStore({
+    const store = queryParameters({
         username: true,
         isCool: ssp.boolean(),
     });
@@ -213,7 +291,7 @@ Write an encode and decode function may seem trivial but it's tedious for sure. 
 </pre>
 ```
 
-this code will produce the same output as the code written above but far more readable and easier to read.
+## ssp - Helpers
 
 There are six helpers all exported as functions on the object ssp.
 
