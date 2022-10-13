@@ -1,6 +1,6 @@
 {
 	"name": "sveltekit-search-params",
-	"version": "0.0.13",
+	"version": "0.1.0",
 	"scripts": {
 		"dev": "vite dev",
 		"version:patch": "npm version patch",
