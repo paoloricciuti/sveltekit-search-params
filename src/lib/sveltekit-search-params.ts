@@ -103,7 +103,7 @@ export function createSearchParamsStore<T extends Options>(options?: T): Writabl
                 if (typeof optionsKey !== "boolean" && typeof optionsKey?.encode === 'function') {
                     fnToCall = optionsKey.encode;
                 }
-                query.set(field as string, fnToCall(value));
+                query.set(field as string, fnToCall(value[field]));
                 goto(`?${query}`, {
                     keepfocus: true,
                     noscroll: true
