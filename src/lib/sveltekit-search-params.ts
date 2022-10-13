@@ -19,11 +19,7 @@ type LooseAutocomplete<T> = {
 };
 
 type Options = {
-    [key: string]: EncodeAndDecodeOptions,
-};
-
-type ReturnValues<T extends Options> = {
-    [K in keyof T]: ReturnType<T[K]['decode']>
+    [key: string]: EncodeAndDecodeOptions | boolean,
 };
 
 function mixSearchAndOptions<T extends Options>(searchParams: URLSearchParams, options?: T): LooseAutocomplete<T> {
@@ -33,8 +29,9 @@ function mixSearchAndOptions<T extends Options>(searchParams: URLSearchParams, o
     return Object.fromEntries(
         uniqueKeys.map((key) => {
             let fnToCall: EncodeAndDecodeOptions['decode'] = (value) => value;
-            if (typeof options?.[key]?.decode === 'function') {
-                fnToCall = options[key].decode;
+            const optionsKey = options?.[key];
+            if (typeof optionsKey !== "boolean" && typeof optionsKey?.decode === 'function') {
+                fnToCall = optionsKey.decode;
             }
             const value = searchParams?.get(key);
             return [key, fnToCall(value)];
@@ -89,16 +86,17 @@ export const ssp = {
     }),
 };
 
-export function createSearchParamsStore<T extends Options>(options?: T): Writable<ReturnValues<LooseAutocomplete<T>>> {
+export function createSearchParamsStore<T extends Options>(options?: T): Writable<LooseAutocomplete<T>> {
     const { set, subscribe, update } = writable<LooseAutocomplete<T>>();
     page.subscribe(($page) => {
         set(
-            new Proxy<ReturnValues<LooseAutocomplete<T>>>(mixSearchAndOptions($page?.url?.searchParams, options), {
+            new Proxy<LooseAutocomplete<T>>(mixSearchAndOptions($page?.url?.searchParams, options), {
                 set: (_, field, value) => {
                     const query = new URLSearchParams($page.url.searchParams);
                     let fnToCall: EncodeAndDecodeOptions['encode'] = (value) => value.toString();
-                    if (typeof options?.[field as string]?.encode === 'function') {
-                        fnToCall = options[field as string].encode;
+                    const optionsKey = options?.[field as string];
+                    if (typeof optionsKey !== "boolean" && typeof optionsKey?.encode === 'function') {
+                        fnToCall = optionsKey.encode;
                     }
                     query.set(field as string, fnToCall(value));
                     goto(`?${query}`, {
