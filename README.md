@@ -5,7 +5,8 @@ The fastest way to read **AND WRITE** from query search params in [sveltekit](ht
 > **Warning**
 >
 > This package is meant to be used with Svelte-Kit as the name suggest. Because it uses api that are **only** present in Svelte-Kit it will not work in your normal svelte project.
-> [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/)
+
+[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/)
 
 ![npm bundle size](https://img.shields.io/bundlephobia/minzip/sveltekit-search-params)
 
