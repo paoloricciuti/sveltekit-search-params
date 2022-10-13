@@ -102,7 +102,7 @@ export function queryParameters<T extends Options>(options?: T): Writable<LooseA
         setRef.value = (value) => {
             const query = new URLSearchParams($page.url.searchParams);
             for (const field of Object.keys(value)) {
-                if (!value[field]) continue;
+                if (!value[field] == undefined) continue;
                 let fnToCall: EncodeAndDecodeOptions['encode'] = (value) => value.toString();
                 const optionsKey = options?.[field as string];
                 if (typeof optionsKey !== "boolean" && typeof optionsKey?.encode === 'function') {
