@@ -44,9 +44,9 @@ function mixSearchAndOptions<T extends Options>(searchParams: URLSearchParams, o
 }
 
 export const ssp = {
-    object: () => ({
-        encode: (value: object) => JSON.stringify(value),
-        decode: (value: string | null) => {
+    object: <T extends object = any>() => ({
+        encode: (value: T) => JSON.stringify(value),
+        decode: (value: string | null): T | null => {
             if (value === null) return null;
             try {
                 return JSON.parse(value);
@@ -55,9 +55,9 @@ export const ssp = {
             }
         },
     }),
-    array: () => ({
-        encode: (value: any[]) => JSON.stringify(value),
-        decode: (value: string | null) => {
+    array: <T = any>() => ({
+        encode: (value: T[]) => JSON.stringify(value),
+        decode: (value: string | null): T[] | null => {
             if (value === null) return null;
             try {
                 return JSON.parse(value);
@@ -78,10 +78,10 @@ export const ssp = {
         encode: (value: string | null) => value ?? "",
         decode: (value: string | null) => value,
     }),
-    lz: () => ({
-        encode: (value: any) =>
+    lz: <T = any>() => ({
+        encode: (value: T) =>
             compressToEncodedURIComponent(JSON.stringify(value)),
-        decode: (value: string | null) => {
+        decode: (value: string | null): T | null => {
             if (!value) return null;
             try {
                 return JSON.parse(
@@ -102,7 +102,10 @@ export function queryParameters<T extends Options>(options?: T): Writable<LooseA
         setRef.value = (value) => {
             const query = new URLSearchParams($page.url.searchParams);
             for (const field of Object.keys(value)) {
-                if (!value[field] == undefined) continue;
+                if (!value[field] == undefined) {
+                    query.delete(field);
+                    continue;
+                }
                 let fnToCall: EncodeAndDecodeOptions['encode'] = (value) => value.toString();
                 const optionsKey = options?.[field as string];
                 if (typeof optionsKey !== "boolean" && typeof optionsKey?.encode === 'function') {
@@ -137,7 +140,7 @@ export function queryParam<T = string>(name: string, { encode: encode = DEFAULT_
         _set(decode($page?.url?.searchParams?.get?.(name)));
         setRef.value = (value) => {
             const query = new URLSearchParams($page.url.searchParams);
-            if (value === null) {
+            if (value == undefined) {
                 query.delete(name);
             } else {
                 query.set(name, encode(value));
