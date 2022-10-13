@@ -97,8 +97,8 @@ export function createSearchParamsStore<T extends Options>(options?: T): Writabl
         _set(mixSearchAndOptions($page?.url?.searchParams, options));
         setRef.value = (value) => {
             const query = new URLSearchParams($page.url.searchParams);
-            let fnToCall: EncodeAndDecodeOptions['encode'] = (value) => value.toString();
             for (const field of Object.keys(value)) {
+                let fnToCall: EncodeAndDecodeOptions['encode'] = (value) => value.toString();
                 const optionsKey = options?.[field as string];
                 if (typeof optionsKey !== "boolean" && typeof optionsKey?.encode === 'function') {
                     fnToCall = optionsKey.encode;
