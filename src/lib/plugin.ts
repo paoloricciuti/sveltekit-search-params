@@ -1,6 +1,6 @@
 import type { Plugin } from "vite";
 
-export function sspPlugin(): Plugin {
+export function ssp(): Plugin {
     return {
         name: 'vite-plugin-sveltekit-search-params',
         config: () => ({
