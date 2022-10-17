@@ -13,27 +13,27 @@ function noop<T>(value: T) { }
 
 export type EncodeAndDecodeOptions<T = any> = {
     encode: (value: T) => string;
-    decode: (value: string | null) => T;
+    decode: (value: string | null) => T | null;
 };
 
 type LooseAutocomplete<T> = {
-    [K in keyof T]: any;
+    [K in keyof T]: T[K];
 } & {
     [K: string]: any;
 };
 
-type Options = {
-    [key: string]: EncodeAndDecodeOptions | boolean,
+type Options<T> = {
+    [Key in keyof T]: EncodeAndDecodeOptions<T[Key]> | boolean;
 };
 
-function mixSearchAndOptions<T extends Options>(searchParams: URLSearchParams, options?: T): LooseAutocomplete<T> {
+function mixSearchAndOptions<T>(searchParams: URLSearchParams, options?: Options<T>): LooseAutocomplete<T> {
     const uniqueKeys = Array.from(
         new Set(Array.from(searchParams?.keys?.() || []).concat(Object.keys(options ?? {})))
     );
     return Object.fromEntries(
         uniqueKeys.map((key) => {
             let fnToCall: EncodeAndDecodeOptions['decode'] = (value) => value;
-            const optionsKey = options?.[key];
+            const optionsKey = (options as any)?.[key];
             if (typeof optionsKey !== "boolean" && typeof optionsKey?.decode === 'function') {
                 fnToCall = optionsKey.decode;
             }
@@ -94,7 +94,7 @@ export const ssp = {
     }),
 };
 
-export function queryParameters<T extends Options>(options?: T): Writable<LooseAutocomplete<T>> {
+export function queryParameters<T extends object>(options?: Options<T>): Writable<LooseAutocomplete<T>> {
     const { set: _set, subscribe, update } = writable<LooseAutocomplete<T>>();
     const setRef: { value: Writable<T>["set"]; } = { value: noop };
     page.subscribe(($page) => {
@@ -102,16 +102,16 @@ export function queryParameters<T extends Options>(options?: T): Writable<LooseA
         setRef.value = (value) => {
             const query = new URLSearchParams($page.url.searchParams);
             for (const field of Object.keys(value)) {
-                if (!value[field] == undefined) {
+                if (!(value as any)[field] == undefined) {
                     query.delete(field);
                     continue;
                 }
                 let fnToCall: EncodeAndDecodeOptions['encode'] = (value) => value.toString();
-                const optionsKey = options?.[field as string];
+                const optionsKey = (options as any)?.[field as string];
                 if (typeof optionsKey !== "boolean" && typeof optionsKey?.encode === 'function') {
                     fnToCall = optionsKey.encode;
                 }
-                query.set(field as string, fnToCall(value[field]));
+                query.set(field as string, fnToCall((value as any)[field]));
             }
             goto(`?${query}`, {
                 keepfocus: true,

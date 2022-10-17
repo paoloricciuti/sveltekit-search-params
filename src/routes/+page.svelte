@@ -5,9 +5,9 @@
         name: ssp.string(),
         count: ssp.number(),
         bool: ssp.boolean(),
-        obj: ssp.object(),
+        obj: ssp.object<{test: string}>(),
         arr: ssp.array(),
-        lz: ssp.lz(),
+        lz: ssp.lz<string>(),
     });
 
     const x = queryParam("x", ssp.lz());
