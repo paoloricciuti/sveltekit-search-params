@@ -1,62 +1,46 @@
-<script lang="ts">
-    import { ssp, queryParameters, queryParam } from "sveltekit-search-params";
-
-    const store = queryParameters({
-        name: ssp.string(),
-        count: ssp.number(),
-        bool: ssp.boolean(),
-        obj: ssp.object<{test: string}>(),
-        arr: ssp.array(),
-        lz: ssp.lz<string>(),
-    });
-
-    const x = queryParam("x", ssp.lz());
+<script>
+  import BrowserWindow from "./BrowserWindow.svelte";
+  import "../assets/fonts.css";
+  import { typewriter } from "svelte-typewriter-store";
+  const store = typewriter(["pablopang", "rich_harris", "albert_einstein"], 30);
 </script>
 
-Test
-<section>
-    {$x}
-    <input bind:value={$x} />
-    <pre>{JSON.stringify($store, null, 2)}</pre>
-    <hr />
-    <input
-        bind:value={$store.name}
-    />
-    <hr />
-    <input
-        value={$store.count}
-        on:input={(e) => {
-            $store.count = e.currentTarget.valueAsNumber;
-        }}
-        type="number"
-    />
-    <hr />
-    <input
-        checked={$store.bool}
-        on:change={(e) => {
-            $store.bool = e.currentTarget.checked;
-        }}
-        type="checkbox"
-    />
-    <hr />
-    <pre>{JSON.stringify($store.obj, null, 2)}</pre>
-    <hr />
-    <button
-        on:click={() => {
-            $store.arr = [...($store.arr ?? []), Math.random()];
-        }}>Add</button
-    >
-    {#each $store.arr ?? [] as elem}
-        <div>{elem}</div>
-    {:else}
-        No elements
-    {/each}
-    <hr />
-    {JSON.stringify($store.lz)}
-    <input
-        value={$store.lz ?? ""}
-        on:input={(e) => {
-            $store.lz = e.currentTarget.value;
-        }}
-    />
-</section>
+<svelte:head>
+  <title>sveltekit-search-params</title>
+</svelte:head>
+<h1>sveltekit-search-params</h1>
+<div class="wrapper">
+  <BrowserWindow title="" url={`https://my.app?username=${$store}`}>
+    <div class="content">
+      <input readonly value={$store} /> <br />
+      Your username is {$store}
+    </div>
+  </BrowserWindow>
+</div>
+
+<style>
+  :global(body) {
+    overflow: hidden;
+    margin: 0;
+    background: #222;
+    color: white;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+      Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  }
+  h1 {
+    text-align: center;
+    max-width: 100vw;
+  }
+  .wrapper {
+    width: 60rem;
+    margin: auto;
+    padding: 1rem;
+  }
+  .content {
+    background-color: white;
+    width: 100%;
+    height: 100%;
+    padding: 2rem;
+    color: black;
+  }
+</style>

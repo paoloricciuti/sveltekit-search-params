@@ -3,4 +3,4 @@ export {
     ssp,
     queryParameters,
     queryParam,
-} from "./sveltekit-search-params";
+} from "./sveltekit-search-params.js";
