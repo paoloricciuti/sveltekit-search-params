@@ -41,6 +41,9 @@
 </div>
 
 <style>
+  :global(:root){
+    overflow: hidden;
+  }
   :global(body) {
     overflow: hidden;
     margin: 0;
