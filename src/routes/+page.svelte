@@ -31,6 +31,9 @@
     >
   </a>
 </h3>
+<div class="npm-wrapper">
+  <code class="npm">npm i sveltekit-search-params</code>
+</div>
 <div class="wrapper">
   <BrowserWindow title="" url={`https://my.app?username=${$store}`}>
     <div class="content">
@@ -81,5 +84,16 @@
     height: 100%;
     padding: 2rem;
     color: black;
+  }
+  .npm-wrapper {
+    display: grid;
+  }
+  .npm {
+    display: inline-block;
+    background: #444;
+    margin: auto;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    user-select: all;
   }
 </style>

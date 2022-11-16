@@ -1,6 +1,6 @@
 {
 	"name": "sveltekit-search-params",
-	"version": "0.1.4",
+	"version": "0.1.5",
 	"repository": "git+https://github.com/paoloricciuti/sveltekit-search-params.git",
 	"author": "Paolo Ricciuti",
 	"license": "MIT",

@@ -97,7 +97,7 @@ export const ssp = {
 export function queryParameters<T extends object>(options?: Options<T>): Writable<LooseAutocomplete<T>> {
     const { set: _set, subscribe, update } = writable<LooseAutocomplete<T>>();
     const setRef: { value: Writable<T>["set"]; } = { value: noop };
-    page.subscribe(($page) => {
+    const unsubPage = page.subscribe(($page) => {
         _set(mixSearchAndOptions($page?.url?.searchParams, options));
         setRef.value = (value) => {
             const query = new URLSearchParams($page.url.searchParams);
@@ -119,11 +119,18 @@ export function queryParameters<T extends object>(options?: Options<T>): Writabl
             });
         };
     });
+    const sub = (...props: Parameters<typeof subscribe>) => {
+        const unsub = subscribe(...props);
+        return () => {
+            unsub();
+            unsubPage();
+        };
+    };
     return {
         set: (value) => {
             setRef.value(value);
         },
-        subscribe,
+        subscribe: sub,
         update
     };
 }
@@ -136,7 +143,7 @@ const DEFAULT_ENCODER_DECODER: EncodeAndDecodeOptions = {
 export function queryParam<T = string>(name: string, { encode: encode = DEFAULT_ENCODER_DECODER.encode, decode: decode = DEFAULT_ENCODER_DECODER.decode }: EncodeAndDecodeOptions<T> = DEFAULT_ENCODER_DECODER): Writable<T | null> {
     const { set: _set, subscribe, update } = writable<T | null>();
     const setRef: { value: Writable<T | null>["set"]; } = { value: noop };
-    page.subscribe(($page) => {
+    const unsubPage = page.subscribe(($page) => {
         _set(decode($page?.url?.searchParams?.get?.(name)));
         setRef.value = (value) => {
             const query = new URLSearchParams($page.url.searchParams);
@@ -151,11 +158,18 @@ export function queryParam<T = string>(name: string, { encode: encode = DEFAULT_
             });
         };
     });
+    const sub = (...props: Parameters<typeof subscribe>) => {
+        const unsub = subscribe(...props);
+        return () => {
+            unsub();
+            unsubPage();
+        };
+    };
     return {
         set: (value) => {
             setRef.value(value);
         },
-        subscribe,
+        subscribe: sub,
         update
     };
 }
