@@ -32,7 +32,7 @@
   </a>
 </h3>
 <div class="npm-wrapper">
-  <code class="npm">npm i sveltekit-search-params</code>
+  <code class="npm">npm i sveltekit-search-params -D</code>
 </div>
 <div class="wrapper">
   <BrowserWindow title="" url={`https://my.app?username=${$store}`}>
@@ -44,7 +44,7 @@
 </div>
 
 <style>
-  :global(:root){
+  :global(:root) {
     overflow: hidden;
   }
   :global(body) {
