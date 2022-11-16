@@ -114,6 +114,10 @@ export function queryParameters<T extends object>(options?: Options<T>): Writabl
                 query.set(field as string, fnToCall((value as any)[field]));
             }
             goto(`?${query}`, {
+                //doing this for back and forward compatibility
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                //@ts-ignore
+                keepFocus: true,
                 keepfocus: true,
                 noscroll: true
             });
@@ -153,6 +157,10 @@ export function queryParam<T = string>(name: string, { encode: encode = DEFAULT_
                 query.set(name, encode(value));
             }
             goto(`?${query}`, {
+                //doing this for back and forward compatibility
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                //@ts-ignore
+                keepFocus: true,
                 keepfocus: true,
                 noscroll: true
             });
