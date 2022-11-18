@@ -94,6 +94,10 @@ export const ssp = {
     }),
 };
 
+const batchedUpdates = new Set<(query: URLSearchParams) => void>();
+
+let batchTimeout: ReturnType<typeof setTimeout>;
+
 export function queryParameters<T extends object>(options?: Options<T>): Writable<LooseAutocomplete<T>> {
     const { set: _set, subscribe, update } = writable<LooseAutocomplete<T>>();
     const setRef: { value: Writable<T>["set"]; } = { value: noop };
@@ -101,21 +105,32 @@ export function queryParameters<T extends object>(options?: Options<T>): Writabl
         _set(mixSearchAndOptions($page?.url?.searchParams, options));
         setRef.value = (value) => {
             const query = new URLSearchParams($page.url.searchParams);
-            for (const field of Object.keys(value)) {
-                if (!(value as any)[field] == undefined) {
-                    query.delete(field);
-                    continue;
+            const toBatch = (query: URLSearchParams) => {
+                for (const field of Object.keys(value)) {
+
+                    if (!(value as any)[field] == undefined) {
+                        query.delete(field);
+                        continue;
+                    }
+                    let fnToCall: EncodeAndDecodeOptions['encode'] = (value) => value.toString();
+                    const optionsKey = (options as any)?.[field as string];
+                    if (typeof optionsKey !== "boolean" && typeof optionsKey?.encode === 'function') {
+                        fnToCall = optionsKey.encode;
+                    }
+                    query.set(field as string, fnToCall((value as any)[field]));
                 }
-                let fnToCall: EncodeAndDecodeOptions['encode'] = (value) => value.toString();
-                const optionsKey = (options as any)?.[field as string];
-                if (typeof optionsKey !== "boolean" && typeof optionsKey?.encode === 'function') {
-                    fnToCall = optionsKey.encode;
-                }
-                query.set(field as string, fnToCall((value as any)[field]));
-            }
-            goto(`?${query}`, {
-                keepFocus: true,
-                noScroll: true
+            };
+            batchedUpdates.add(toBatch);
+            clearTimeout(batchTimeout);
+            batchTimeout = setTimeout(() => {
+                batchedUpdates.forEach((batched) => {
+                    batched(query);
+                });
+                goto(`?${query}`, {
+                    keepFocus: true,
+                    noScroll: true,
+                });
+                batchedUpdates.clear();
             });
         };
     });
@@ -146,15 +161,25 @@ export function queryParam<T = string>(name: string, { encode: encode = DEFAULT_
     const unsubPage = page.subscribe(($page) => {
         _set(decode($page?.url?.searchParams?.get?.(name)));
         setRef.value = (value) => {
+            const toBatch = (query: URLSearchParams) => {
+                if (value == undefined) {
+                    query.delete(name);
+                } else {
+                    query.set(name, encode(value));
+                }
+            };
+            batchedUpdates.add(toBatch);
+            clearTimeout(batchTimeout);
             const query = new URLSearchParams($page.url.searchParams);
-            if (value == undefined) {
-                query.delete(name);
-            } else {
-                query.set(name, encode(value));
-            }
-            goto(`?${query}`, {
-                keepFocus: true,
-                noScroll: true,
+            batchTimeout = setTimeout(() => {
+                batchedUpdates.forEach((batched) => {
+                    batched(query);
+                });
+                goto(`?${query}`, {
+                    keepFocus: true,
+                    noScroll: true,
+                });
+                batchedUpdates.clear();
             });
         };
     });
