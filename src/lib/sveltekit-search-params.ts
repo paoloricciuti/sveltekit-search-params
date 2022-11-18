@@ -68,7 +68,7 @@ export const ssp = {
     }),
     number: () => ({
         encode: (value: number) => value.toString(),
-        decode: (value: string | null) => value ? parseInt(value) : null,
+        decode: (value: string | null) => value ? parseFloat(value) : null,
     }),
     boolean: () => ({
         encode: (value: boolean) => value + "",
