@@ -127,6 +127,31 @@ The count is {$count}
 
 this time $count would be of type number and the deconding function it's what's used to update the url when you write to the store.
 
+### Default values
+
+Sometimes when we want to create a new variable we like to pass a default value. You can do this by passing a third field, `defaultValue`, in the second argument of the query param object.
+
+```svelte
+<script lang="ts">
+    import { queryParam } from "sveltekit-search-params";
+
+    const count = queryParam("count", {
+        encode: (value: number) => value.toString(),
+        decode: (value: string | null) => value ? parseInt(value) : null,
+        defaultValue: 10,
+    });
+</script>
+
+The count is {$count}
+<input bind:value={$count} type="number"/>
+```
+
+this will make the query parameter change as soon as the page is rendered on the browser (the query parameter will change only if it's not already present and only the first time the application render).
+
+> **Warning**
+>
+> You can't run `goto` on the server so if the page is server side rendered it will still have the null value (this is to say don't relay on the assumption that the store will always be not null).
+
 ### Helpers encodings and decodings
 
 Write an encode and decode function may seem trivial but it's tedious for sure. `sveltekit-search-params` provide with a set of helpers for better readability and to avoid the hassle of writing common transforms. You can find those helpers exported in a ssp variable from the same package.
@@ -142,7 +167,21 @@ The count is {$count}
 <input bind:value={$count} type="number"/>
 ```
 
-this code will produce the same output as the code written above but far more readable and easier to read. You can find all the exports documented in the section [ssp - Helpers](#ssp---helpers)
+this code will produce the same output as the code written above but far more readable and easier to read. You can find all the exports documented in the section [ssp - Helpers](#ssp---helpers).
+
+You can also pass a default value to the function that will be the defaultValue of the object.
+
+```svelte
+<script lang="ts">
+    import { ssp, queryParam } from "sveltekit-search-params";
+
+    const count = queryParam("count", ssp.number(10));
+</script>
+
+The count is {$count}
+<input bind:value={$count} type="number"/>
+```
+
 
 ### Simple case (all parameters)
 
@@ -243,6 +282,7 @@ The parameter passed to `queryParameters` can aslo be used to specify the encodi
         isCool: {
             encode: (booleanValue) => booleanValue.toString(),
             decode: (stringValue) => stringValue !== null && stringValue !== "false",
+            defautValue: true,
         }
     });
 </script>
@@ -282,7 +322,7 @@ Obviously also in this case you can use the helpers functions provided inside `s
 
     const store = queryParameters({
         username: true,
-        isCool: ssp.boolean(),
+        isCool: ssp.boolean(true),
     });
 </script>
 
@@ -293,7 +333,7 @@ Obviously also in this case you can use the helpers functions provided inside `s
 
 ## ssp - Helpers
 
-There are six helpers all exported as functions on the object ssp.
+There are six helpers all exported as functions on the object ssp. To each one of them you can pass a parameter that will be the default value for that query param.
 
 #### object
 

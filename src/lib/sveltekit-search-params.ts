@@ -3,6 +3,7 @@
 import { writable, type Writable } from 'svelte/store';
 import { goto } from '$app/navigation';
 import { page } from '$app/stores';
+import { browser } from '$app/environment';
 import {
     compressToEncodedURIComponent,
     decompressFromEncodedURIComponent,
@@ -14,6 +15,7 @@ function noop<T>(value: T) { }
 export type EncodeAndDecodeOptions<T = any> = {
     encode: (value: T) => string;
     decode: (value: string | null) => T | null;
+    defaultValue?: T,
 };
 
 type LooseAutocomplete<T> = {
@@ -26,11 +28,12 @@ type Options<T> = {
     [Key in keyof T]: EncodeAndDecodeOptions<T[Key]> | boolean;
 };
 
-function mixSearchAndOptions<T>(searchParams: URLSearchParams, options?: Options<T>): LooseAutocomplete<T> {
+function mixSearchAndOptions<T>(searchParams: URLSearchParams, options?: Options<T>): [LooseAutocomplete<T>, boolean] {
     const uniqueKeys = Array.from(
         new Set(Array.from(searchParams?.keys?.() || []).concat(Object.keys(options ?? {})))
     );
-    return Object.fromEntries(
+    let anyDefaultedParam = false;
+    return [Object.fromEntries(
         uniqueKeys.map((key) => {
             let fnToCall: EncodeAndDecodeOptions['decode'] = (value) => value;
             const optionsKey = (options as any)?.[key];
@@ -38,13 +41,21 @@ function mixSearchAndOptions<T>(searchParams: URLSearchParams, options?: Options
                 fnToCall = optionsKey.decode;
             }
             const value = searchParams?.get(key);
-            return [key, fnToCall(value)];
+            let actualValue;
+            if (browser && value == undefined && optionsKey?.defaultValue != undefined && !defaultedParams.has(key)) {
+                actualValue = optionsKey.defaultValue;
+                defaultedParams.add(key);
+                anyDefaultedParam = true;
+            } else {
+                actualValue = fnToCall(value);
+            }
+            return [key, actualValue];
         })
-    ) as unknown as LooseAutocomplete<T>;
+    ) as unknown as LooseAutocomplete<T>, anyDefaultedParam];
 }
 
 export const ssp = {
-    object: <T extends object = any>() => ({
+    object: <T extends object = any>(defaultValue?: T) => ({
         encode: (value: T) => JSON.stringify(value),
         decode: (value: string | null): T | null => {
             if (value === null) return null;
@@ -54,8 +65,9 @@ export const ssp = {
                 return null;
             }
         },
+        defaultValue,
     }),
-    array: <T = any>() => ({
+    array: <T = any>(defaultValue?: T) => ({
         encode: (value: T[]) => JSON.stringify(value),
         decode: (value: string | null): T[] | null => {
             if (value === null) return null;
@@ -65,20 +77,24 @@ export const ssp = {
                 return null;
             }
         },
+        defaultValue,
     }),
-    number: () => ({
+    number: (defaultValue?: number) => ({
         encode: (value: number) => value.toString(),
         decode: (value: string | null) => value ? parseFloat(value) : null,
+        defaultValue,
     }),
-    boolean: () => ({
+    boolean: (defaultValue?: boolean) => ({
         encode: (value: boolean) => value + "",
-        decode: (value: string | null) => value !== null && value !== "false"
+        decode: (value: string | null) => value !== null && value !== "false",
+        defaultValue,
     }),
-    string: () => ({
+    string: (defaultValue?: string) => ({
         encode: (value: string | null) => value ?? "",
         decode: (value: string | null) => value,
+        defaultValue,
     }),
-    lz: <T = any>() => ({
+    lz: <T = any>(defaultValue?: T) => ({
         encode: (value: T) =>
             compressToEncodedURIComponent(JSON.stringify(value)),
         decode: (value: string | null): T | null => {
@@ -90,7 +106,8 @@ export const ssp = {
             } catch (e) {
                 return null;
             }
-        }
+        },
+        defaultValue,
     }),
 };
 
@@ -98,11 +115,12 @@ const batchedUpdates = new Set<(query: URLSearchParams) => void>();
 
 let batchTimeout: ReturnType<typeof setTimeout>;
 
+const defaultedParams = new Set<string>();
+
 export function queryParameters<T extends object>(options?: Options<T>): Writable<LooseAutocomplete<T>> {
     const { set: _set, subscribe, update } = writable<LooseAutocomplete<T>>();
     const setRef: { value: Writable<T>["set"]; } = { value: noop };
     const unsubPage = page.subscribe(($page) => {
-        _set(mixSearchAndOptions($page?.url?.searchParams, options));
         setRef.value = (value) => {
             const query = new URLSearchParams($page.url.searchParams);
             const toBatch = (query: URLSearchParams) => {
@@ -133,6 +151,13 @@ export function queryParameters<T extends object>(options?: Options<T>): Writabl
                 batchedUpdates.clear();
             });
         };
+        const [valueToSet, anyDefaultedParam] = mixSearchAndOptions($page?.url?.searchParams, options);
+        if (anyDefaultedParam) {
+            setRef.value(valueToSet);
+        } else {
+            _set(valueToSet);
+        }
+
     });
     const sub = (...props: Parameters<typeof subscribe>) => {
         const unsub = subscribe(...props);
@@ -155,11 +180,11 @@ const DEFAULT_ENCODER_DECODER: EncodeAndDecodeOptions = {
     decode: (value: string | null) => value ? value.toString() : null,
 };
 
-export function queryParam<T = string>(name: string, { encode: encode = DEFAULT_ENCODER_DECODER.encode, decode: decode = DEFAULT_ENCODER_DECODER.decode }: EncodeAndDecodeOptions<T> = DEFAULT_ENCODER_DECODER): Writable<T | null> {
+export function queryParam<T = string>(name: string, { encode: encode = DEFAULT_ENCODER_DECODER.encode, decode: decode = DEFAULT_ENCODER_DECODER.decode, defaultValue }: EncodeAndDecodeOptions<T> = DEFAULT_ENCODER_DECODER): Writable<T | null> {
     const { set: _set, subscribe, update } = writable<T | null>();
     const setRef: { value: Writable<T | null>["set"]; } = { value: noop };
     const unsubPage = page.subscribe(($page) => {
-        _set(decode($page?.url?.searchParams?.get?.(name)));
+        const actualParam = $page?.url?.searchParams?.get?.(name);
         setRef.value = (value) => {
             const toBatch = (query: URLSearchParams) => {
                 if (value == undefined) {
@@ -182,6 +207,13 @@ export function queryParam<T = string>(name: string, { encode: encode = DEFAULT_
                 batchedUpdates.clear();
             });
         };
+        if (browser && actualParam == undefined && defaultValue != undefined && !defaultedParams.has(name)) {
+            _set(defaultValue);
+            setRef.value(defaultValue);
+            defaultedParams.add(name);
+        } else {
+            _set(decode(actualParam));
+        }
     });
     const sub = (...props: Parameters<typeof subscribe>) => {
         const unsub = subscribe(...props);
