@@ -4,10 +4,9 @@ import { writable, type Writable } from 'svelte/store';
 import { goto } from '$app/navigation';
 import { page } from '$app/stores';
 import { browser } from '$app/environment';
-import {
-    compressToEncodedURIComponent,
-    decompressFromEncodedURIComponent,
-} from "lz-string";
+import { default as lz } from "lz-string";
+
+const { decompressFromEncodedURIComponent, compressToEncodedURIComponent } = lz;
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function noop<T>(value: T) { }
