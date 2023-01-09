@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { writable, type Writable } from 'svelte/store';
+import { writable, get, type Writable, type Updater } from 'svelte/store';
 import { goto } from '$app/navigation';
 import { page } from '$app/stores';
 import { browser } from '$app/environment';
@@ -115,7 +115,7 @@ let batchTimeout: ReturnType<typeof setTimeout>;
 const defaultedParams = new Set<string>();
 
 export function queryParameters<T extends object>(options?: Options<T>): Writable<LooseAutocomplete<T>> {
-    const { set: _set, subscribe, update } = writable<LooseAutocomplete<T>>();
+    const { set: _set, subscribe } = writable<LooseAutocomplete<T>>();
     const setRef: { value: Writable<T>["set"]; } = { value: noop };
     const unsubPage = page.subscribe(($page) => {
         setRef.value = (value) => {
@@ -168,7 +168,11 @@ export function queryParameters<T extends object>(options?: Options<T>): Writabl
             setRef.value(value);
         },
         subscribe: sub,
-        update
+        update: (updater: Updater<LooseAutocomplete<T>>) => {
+            const currentValue = get({ subscribe });
+            const newValue = updater(currentValue);
+            setRef.value(newValue);
+        }
     };
 }
 
@@ -178,7 +182,7 @@ const DEFAULT_ENCODER_DECODER: EncodeAndDecodeOptions = {
 };
 
 export function queryParam<T = string>(name: string, { encode: encode = DEFAULT_ENCODER_DECODER.encode, decode: decode = DEFAULT_ENCODER_DECODER.decode, defaultValue }: EncodeAndDecodeOptions<T> = DEFAULT_ENCODER_DECODER): Writable<T | null> {
-    const { set: _set, subscribe, update } = writable<T | null>();
+    const { set: _set, subscribe } = writable<T | null>();
     const setRef: { value: Writable<T | null>["set"]; } = { value: noop };
     const unsubPage = page.subscribe(($page) => {
         const actualParam = $page?.url?.searchParams?.get?.(name);
@@ -224,6 +228,10 @@ export function queryParam<T = string>(name: string, { encode: encode = DEFAULT_
             setRef.value(value);
         },
         subscribe: sub,
-        update
+        update: (updater: Updater<T | null>) => {
+            const currentValue = get({ subscribe });
+            const newValue = updater(currentValue);
+            setRef.value(newValue);
+        }
     };
 }
