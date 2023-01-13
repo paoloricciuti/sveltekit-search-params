@@ -393,3 +393,37 @@ An url like this `/?state=N4IgbghgNgrgpiAXCAsgTwAQGMD2OoYCO8ATpgA4QkQC2cALnCSAL5
 ```typescript
 $store.state.value; //My cool query parameter
 ```
+
+## Store options
+
+Both functions accept a configuration object that contains the following properties:
+
+### debounceHistory
+
+The number of milliseconds to delay the writing of the history when the state changes. This is to avoid cluttering the history of the user especially when a store is bound to an input text (every keystroke would cause a new history entry). It defaults to 0. If set a new entry in the history will be added only after `debounceHistory` seconds of "inactivity".
+
+### pushHistory
+
+A boolean defining if the history have to be written at all. If set to false no new history entries will be written to the history stack (the URL will still update but the user will not be able to go back with the browser).
+
+### How to use it
+
+To set the configuration object you can pass it as a third parameter in case of `queryParam` or the second in case of `queryParameters`.
+
+```svelte
+<script lang="ts">
+    import { ssp, queryParameters, queryParam } from "sveltekit-search-params";
+    const name = queryParam("name", ssp.string(), {
+        debounceHistory: 500, //a new history entry will be created after 500ms of this store not changing
+    });
+    const count = queryParam("count", ssp.number(), {
+        debounceHistory: 1500, //a new history entry will be created after 1500ms of this store not changing
+    })
+    const store = queryParameters({
+        username: true,
+        isCool: ssp.boolean(true),
+    }, {
+        pushHistory: false, //no new history entries for this store
+    });
+</script>
+```
