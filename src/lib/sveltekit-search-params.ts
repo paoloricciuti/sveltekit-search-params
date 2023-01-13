@@ -9,10 +9,28 @@ import { decompressFromEncodedURIComponent, compressToEncodedURIComponent } from
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function noop<T>(value: T) { }
 
+const GOTO_OPTIONS = {
+    keepFocus: true,
+    noScroll: true,
+    replaceState: true,
+};
+
+const GOTO_OPTIONS_PUSH = {
+    keepFocus: true,
+    noScroll: true,
+    replaceState: false,
+};
+
+
 export type EncodeAndDecodeOptions<T = any> = {
     encode: (value: T) => string;
     decode: (value: string | null) => T | null;
-    defaultValue?: T,
+    defaultValue?: T;
+};
+
+export type StoreOptions = {
+    debounceHistory?: number;
+    pushHistory?: boolean;
 };
 
 type LooseAutocomplete<T> = {
@@ -108,13 +126,23 @@ export const ssp = {
     }),
 };
 
+type SetTimeout = ReturnType<typeof setTimeout>;
+
 const batchedUpdates = new Set<(query: URLSearchParams) => void>();
 
-let batchTimeout: ReturnType<typeof setTimeout>;
+let batchTimeout: SetTimeout;
 
 const defaultedParams = new Set<string>();
 
-export function queryParameters<T extends object>(options?: Options<T>): Writable<LooseAutocomplete<T>> {
+const debouncedTimeouts = new Map<string, SetTimeout>();
+
+export function queryParameters<T extends object>(
+    options?: Options<T>,
+    {
+        debounceHistory = 0,
+        pushHistory = true,
+    }: StoreOptions = {},
+): Writable<LooseAutocomplete<T>> {
     const { set: _set, subscribe } = writable<LooseAutocomplete<T>>();
     const setRef: { value: Writable<T>["set"]; } = { value: noop };
     const unsubPage = page.subscribe(($page) => {
@@ -141,10 +169,13 @@ export function queryParameters<T extends object>(options?: Options<T>): Writabl
                 batchedUpdates.forEach((batched) => {
                     batched(query);
                 });
-                goto(`?${query}`, {
-                    keepFocus: true,
-                    noScroll: true,
-                });
+                goto(`?${query}`, GOTO_OPTIONS);
+                clearTimeout(debouncedTimeouts.get("queryParameters"));
+                if (pushHistory) {
+                    debouncedTimeouts.set("queryParameters", setTimeout(() => {
+                        goto("", GOTO_OPTIONS_PUSH);
+                    }, debounceHistory));
+                }
                 batchedUpdates.clear();
             });
         };
@@ -181,7 +212,18 @@ const DEFAULT_ENCODER_DECODER: EncodeAndDecodeOptions = {
     decode: (value: string | null) => value ? value.toString() : null,
 };
 
-export function queryParam<T = string>(name: string, { encode: encode = DEFAULT_ENCODER_DECODER.encode, decode: decode = DEFAULT_ENCODER_DECODER.decode, defaultValue }: EncodeAndDecodeOptions<T> = DEFAULT_ENCODER_DECODER): Writable<T | null> {
+export function queryParam<T = string>(
+    name: string,
+    {
+        encode: encode = DEFAULT_ENCODER_DECODER.encode,
+        decode: decode = DEFAULT_ENCODER_DECODER.decode,
+        defaultValue
+    }: EncodeAndDecodeOptions<T> = DEFAULT_ENCODER_DECODER,
+    {
+        debounceHistory = 0,
+        pushHistory = true,
+    }: StoreOptions = {}
+): Writable<T | null> {
     const { set: _set, subscribe } = writable<T | null>();
     const setRef: { value: Writable<T | null>["set"]; } = { value: noop };
     const unsubPage = page.subscribe(($page) => {
@@ -201,10 +243,13 @@ export function queryParam<T = string>(name: string, { encode: encode = DEFAULT_
                 batchedUpdates.forEach((batched) => {
                     batched(query);
                 });
-                goto(`?${query}`, {
-                    keepFocus: true,
-                    noScroll: true,
-                });
+                goto(`?${query}`, GOTO_OPTIONS);
+                clearTimeout(debouncedTimeouts.get(name));
+                if (pushHistory) {
+                    debouncedTimeouts.set(name, setTimeout(() => {
+                        goto("", GOTO_OPTIONS_PUSH);
+                    }, debounceHistory));
+                }
                 batchedUpdates.clear();
             });
         };
