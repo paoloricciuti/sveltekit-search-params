@@ -173,7 +173,9 @@ export function queryParameters<T extends object>(
                 clearTimeout(debouncedTimeouts.get("queryParameters"));
                 if (pushHistory) {
                     debouncedTimeouts.set("queryParameters", setTimeout(() => {
-                        goto("", GOTO_OPTIONS_PUSH);
+                        const updatedPage = get(page);
+                        const updatedQuery = new URLSearchParams(updatedPage.url.searchParams);
+                        goto(`${updatedQuery.toString()}`, GOTO_OPTIONS_PUSH);
                     }, debounceHistory));
                 }
                 batchedUpdates.clear();
@@ -247,7 +249,9 @@ export function queryParam<T = string>(
                 clearTimeout(debouncedTimeouts.get(name));
                 if (pushHistory) {
                     debouncedTimeouts.set(name, setTimeout(() => {
-                        goto("", GOTO_OPTIONS_PUSH);
+                        const updatedPage = get(page);
+                        const updatedQuery = new URLSearchParams(updatedPage.url.searchParams);
+                        goto(`${updatedQuery.toString()}`, GOTO_OPTIONS_PUSH);
                     }, debounceHistory));
                 }
                 batchedUpdates.clear();
