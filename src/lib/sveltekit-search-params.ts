@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { writable, get, type Writable, type Updater } from 'svelte/store';
-import { goto } from '$app/navigation';
+import { goto, afterNavigate } from '$app/navigation';
 import { page } from '$app/stores';
 import { browser } from '$app/environment';
 import { decompressFromEncodedURIComponent, compressToEncodedURIComponent } from "./lz-string/index.js";
@@ -143,6 +143,12 @@ export function queryParameters<T extends object>(
         pushHistory = true,
     }: StoreOptions = {},
 ): Writable<LooseAutocomplete<T>> {
+    let pushHistoryCb: (() => void) | null = null;
+    afterNavigate(() => {
+        if (pushHistoryCb) {
+            pushHistoryCb();
+        }
+    });
     const { set: _set, subscribe } = writable<LooseAutocomplete<T>>();
     const setRef: { value: Writable<T>["set"]; } = { value: noop };
     const unsubPage = page.subscribe(($page) => {
@@ -173,9 +179,10 @@ export function queryParameters<T extends object>(
                 clearTimeout(debouncedTimeouts.get("queryParameters"));
                 if (pushHistory) {
                     debouncedTimeouts.set("queryParameters", setTimeout(() => {
-                        const updatedPage = get(page);
-                        const updatedQuery = new URLSearchParams(updatedPage.url.searchParams);
-                        goto(`?${updatedQuery.toString()}`, GOTO_OPTIONS_PUSH);
+                        pushHistoryCb = () => {
+                            goto("", GOTO_OPTIONS_PUSH);
+                            pushHistoryCb = null;
+                        };
                     }, debounceHistory));
                 }
                 batchedUpdates.clear();
@@ -226,6 +233,12 @@ export function queryParam<T = string>(
         pushHistory = true,
     }: StoreOptions = {}
 ): Writable<T | null> {
+    let pushHistoryCb: (() => void) | null = null;
+    afterNavigate(() => {
+        if (pushHistoryCb) {
+            pushHistoryCb();
+        }
+    });
     const { set: _set, subscribe } = writable<T | null>();
     const setRef: { value: Writable<T | null>["set"]; } = { value: noop };
     const unsubPage = page.subscribe(($page) => {
@@ -249,9 +262,10 @@ export function queryParam<T = string>(
                 clearTimeout(debouncedTimeouts.get(name));
                 if (pushHistory) {
                     debouncedTimeouts.set(name, setTimeout(() => {
-                        const updatedPage = get(page);
-                        const updatedQuery = new URLSearchParams(updatedPage.url.searchParams);
-                        goto(`?${updatedQuery.toString()}`, GOTO_OPTIONS_PUSH);
+                        pushHistoryCb = () => {
+                            goto("", GOTO_OPTIONS_PUSH);
+                            pushHistoryCb = null;
+                        };
                     }, debounceHistory));
                 }
                 batchedUpdates.clear();
