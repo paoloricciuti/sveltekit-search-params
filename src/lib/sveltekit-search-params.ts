@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { writable, get, type Writable, type Updater } from 'svelte/store';
-import { goto, afterNavigate } from '$app/navigation';
-import { page } from '$app/stores';
 import { browser } from '$app/environment';
-import { decompressFromEncodedURIComponent, compressToEncodedURIComponent } from "./lz-string/index.js";
+import { goto } from '$app/navigation';
+import { page } from '$app/stores';
+import { get, writable, type Updater, type Writable } from 'svelte/store';
+import { compressToEncodedURIComponent, decompressFromEncodedURIComponent } from "./lz-string/index.js";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function noop<T>(value: T) { }
@@ -143,12 +143,6 @@ export function queryParameters<T extends object>(
         pushHistory = true,
     }: StoreOptions = {},
 ): Writable<LooseAutocomplete<T>> {
-    let pushHistoryCb: (() => void) | null = null;
-    afterNavigate(() => {
-        if (pushHistoryCb) {
-            pushHistoryCb();
-        }
-    });
     const { set: _set, subscribe } = writable<LooseAutocomplete<T>>();
     const setRef: { value: Writable<T>["set"]; } = { value: noop };
     const unsubPage = page.subscribe(($page) => {
@@ -171,18 +165,15 @@ export function queryParameters<T extends object>(
             };
             batchedUpdates.add(toBatch);
             clearTimeout(batchTimeout);
-            batchTimeout = setTimeout(() => {
+            batchTimeout = setTimeout(async () => {
                 batchedUpdates.forEach((batched) => {
                     batched(query);
                 });
-                goto(`?${query}`, GOTO_OPTIONS);
                 clearTimeout(debouncedTimeouts.get("queryParameters"));
+                await goto(`?${query}`, GOTO_OPTIONS);
                 if (pushHistory) {
                     debouncedTimeouts.set("queryParameters", setTimeout(() => {
-                        pushHistoryCb = () => {
-                            goto("", GOTO_OPTIONS_PUSH);
-                            pushHistoryCb = null;
-                        };
+                        goto("", GOTO_OPTIONS_PUSH);
                     }, debounceHistory));
                 }
                 batchedUpdates.clear();
@@ -233,12 +224,6 @@ export function queryParam<T = string>(
         pushHistory = true,
     }: StoreOptions = {}
 ): Writable<T | null> {
-    let pushHistoryCb: (() => void) | null = null;
-    afterNavigate(() => {
-        if (pushHistoryCb) {
-            pushHistoryCb();
-        }
-    });
     const { set: _set, subscribe } = writable<T | null>();
     const setRef: { value: Writable<T | null>["set"]; } = { value: noop };
     const unsubPage = page.subscribe(($page) => {
@@ -254,18 +239,15 @@ export function queryParam<T = string>(
             batchedUpdates.add(toBatch);
             clearTimeout(batchTimeout);
             const query = new URLSearchParams($page.url.searchParams);
-            batchTimeout = setTimeout(() => {
+            batchTimeout = setTimeout(async () => {
                 batchedUpdates.forEach((batched) => {
                     batched(query);
                 });
-                goto(`?${query}`, GOTO_OPTIONS);
                 clearTimeout(debouncedTimeouts.get(name));
+                await goto(`?${query}`, GOTO_OPTIONS);
                 if (pushHistory) {
                     debouncedTimeouts.set(name, setTimeout(() => {
-                        pushHistoryCb = () => {
-                            goto("", GOTO_OPTIONS_PUSH);
-                            pushHistoryCb = null;
-                        };
+                        goto("", GOTO_OPTIONS_PUSH);
                     }, debounceHistory));
                 }
                 batchedUpdates.clear();
