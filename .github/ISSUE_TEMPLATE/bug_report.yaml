@@ -1,0 +1,29 @@
+name: "\U0001F41E Bug report"
+description: Report an issue
+body:
+  - type: markdown
+    attributes:
+      value: |
+        First thing first, thanks for reporting!
+  - type: textarea
+    id: bug-description
+    attributes:
+      label: Describe the bug
+      description: A clear and concise description of what the bug is. If you intend to submit a PR for this issue, tell us in the description. Thanks!
+      placeholder: Bug description
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: Please provide a link to a repo or better a stackblitz/replit that can reproduce the problem you ran into. This will speed up the fixing.
+      placeholder: Reproduction
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: "Please include browser console and server logs around the time this bug occurred. Optional if provided reproduction. Please try not to insert an image but copy paste the log text."
+      render: shell

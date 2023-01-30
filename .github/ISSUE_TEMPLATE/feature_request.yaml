@@ -1,0 +1,23 @@
+name: "\U0001F4A1 Feature Request"
+description: Request a new feature
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for taking the time to propose a new idea
+  - type: textarea
+    id: problem
+    attributes:
+      label: Describe the problem
+      description: Please provide a clear and concise description the problem this feature would solve. The more information you can provide here, the better.
+      placeholder: I would like to...
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Describe the proposed solution
+      description: Try to provide a description of the API you would like to see implemented
+      placeholder: I would like to see...
+    validations:
+      required: true
