@@ -410,7 +410,7 @@ To set the configuration object you can pass it as a third parameter in case of 
 
 ## Vite dependecies error
 
-If ran into issues with vite you need to update your `vite.config.ts` or `vite.config.js` file to include the plugin exported from `sveltekit-search-params/plugin`. It's as simple as
+If you ran into issues with vite you need to update your `vite.config.ts` or `vite.config.js` file to include the plugin exported from `sveltekit-search-params/plugin`. It's as simple as
 
 ```javascript
 import { sveltekit } from "@sveltejs/kit/vite";
