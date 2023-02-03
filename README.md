@@ -40,26 +40,6 @@ Install sveltekit-search-params with npm
 
 ## Usage/Examples
 
-Once installed in your Svelte-Kit project you need to update your `vite.config.ts` or `vite.config.js` file to include the plugin exported from `sveltekit-search-params/plugin`. It's as simple as
-
-```javascript
-import { sveltekit } from "@sveltejs/kit/vite";
-import { ssp } from "sveltekit-search-params/plugin";
-
-/** @type {import('vite').UserConfig} */
-const config = {
-  plugins: [ssp(), sveltekit()],
-};
-
-export default config;
-```
-
-> **Warning**
->
-> This step it's very important, if you don't use this plugin your entire app will break.
-
-After that you can start using `sveltekit-search-params`,
-
 ### Simple case (single parameter)
 
 The simplest and most effective way to use this library is by importing the method `queryParam`. You can invoke this method with a string that represent the search parameters you are looking for in the URL.
@@ -427,3 +407,23 @@ To set the configuration object you can pass it as a third parameter in case of 
     });
 </script>
 ```
+
+## Vite dependecies error
+
+If ran into issues with vite you need to update your `vite.config.ts` or `vite.config.js` file to include the plugin exported from `sveltekit-search-params/plugin`. It's as simple as
+
+```javascript
+import { sveltekit } from "@sveltejs/kit/vite";
+import { ssp } from "sveltekit-search-params/plugin";
+
+/** @type {import('vite').UserConfig} */
+const config = {
+  plugins: [ssp(), sveltekit()],
+};
+
+export default config;
+```
+
+> **Warning**
+>
+> This step is required if you are running on an old version of vite/sveltekit
