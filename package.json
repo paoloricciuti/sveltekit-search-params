@@ -50,5 +50,12 @@
 	"type": "module",
 	"peerDependencies": {
 		"svelte": "^3.44.0"
+	},
+	"exports": {
+		"./package.json": "./package.json",
+		".": "./index.js",
+		"./lz-string": "./lz-string/index.js",
+		"./plugin": "./plugin.js",
+		"./sveltekit-search-params": "./sveltekit-search-params.js"
 	}
 }
