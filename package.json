@@ -1,6 +1,6 @@
 {
 	"name": "sveltekit-search-params",
-	"version": "1.0.4",
+	"version": "1.0.5",
 	"repository": "git+https://github.com/paoloricciuti/sveltekit-search-params.git",
 	"author": "Paolo Ricciuti",
 	"license": "MIT",
@@ -25,7 +25,7 @@
 		"version:minor": "npm version minor",
 		"version:major": "npm version major",
 		"build:landing": "vite build",
-		"build": "svelte-kit sync && svelte-package",
+		"build": "svelte-kit sync && svelte-package -o package",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"lint": "eslint ."
@@ -33,7 +33,7 @@
 	"devDependencies": {
 		"@sveltejs/adapter-static": "^1.0.0-next.47",
 		"@sveltejs/kit": "^1.0.7",
-		"@sveltejs/package": "next",
+		"@sveltejs/package": "^2.0.0",
 		"@typescript-eslint/eslint-plugin": "^5.27.0",
 		"@typescript-eslint/parser": "^5.27.0",
 		"eslint": "^8.16.0",
@@ -53,9 +53,28 @@
 	},
 	"exports": {
 		"./package.json": "./package.json",
-		".": "./index.js",
-		"./lz-string": "./lz-string/index.js",
-		"./plugin": "./plugin.js",
-		"./sveltekit-search-params": "./sveltekit-search-params.js"
+		".": "./package/index.js",
+		"./lz-string": "./package/lz-string/index.js",
+		"./plugin": "./package/plugin.js",
+		"./sveltekit-search-params": "./package/sveltekit-search-params.js"
+	},
+	"files": [
+		"package"
+	],
+	"typesVersions": {
+		">4.0": {
+			"index": [
+				"./package/index.d.ts"
+			],
+			"lz-string": [
+				"./package/lz-string/index.d.ts"
+			],
+			"plugin": [
+				"./package/plugin.d.ts"
+			],
+			"sveltekit-search-params": [
+				"./package/sveltekit-search-params.d.ts"
+			]
+		}
 	}
 }
