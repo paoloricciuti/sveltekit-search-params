@@ -4,10 +4,13 @@ import { browser } from '$app/environment';
 import { goto } from '$app/navigation';
 import { page } from '$app/stores';
 import { get, writable, type Updater, type Writable } from 'svelte/store';
-import { compressToEncodedURIComponent, decompressFromEncodedURIComponent } from "./lz-string/index.js";
+import {
+    compressToEncodedURIComponent,
+    decompressFromEncodedURIComponent,
+} from './lz-string/index.js';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-function noop<T>(value: T) { }
+function noop<T>(value: T) {}
 
 const GOTO_OPTIONS = {
     keepFocus: true,
@@ -20,7 +23,6 @@ const GOTO_OPTIONS_PUSH = {
     noScroll: true,
     replaceState: false,
 };
-
 
 export type EncodeAndDecodeOptions<T = any> = {
     encode: (value: T) => string;
@@ -43,30 +45,49 @@ type Options<T> = {
     [Key in keyof T]: EncodeAndDecodeOptions<T[Key]> | boolean;
 };
 
-function mixSearchAndOptions<T>(searchParams: URLSearchParams, options?: Options<T>): [LooseAutocomplete<T>, boolean] {
+function mixSearchAndOptions<T>(
+    searchParams: URLSearchParams,
+    options?: Options<T>
+): [LooseAutocomplete<T>, boolean] {
     const uniqueKeys = Array.from(
-        new Set(Array.from(searchParams?.keys?.() || []).concat(Object.keys(options ?? {})))
+        new Set(
+            Array.from(searchParams?.keys?.() || []).concat(
+                Object.keys(options ?? {})
+            )
+        )
     );
     let anyDefaultedParam = false;
-    return [Object.fromEntries(
-        uniqueKeys.map((key) => {
-            let fnToCall: EncodeAndDecodeOptions['decode'] = (value) => value;
-            const optionsKey = (options as any)?.[key];
-            if (typeof optionsKey !== "boolean" && typeof optionsKey?.decode === 'function') {
-                fnToCall = optionsKey.decode;
-            }
-            const value = searchParams?.get(key);
-            let actualValue;
-            if (browser && value == undefined && optionsKey?.defaultValue != undefined && !defaultedParams.has(key)) {
-                actualValue = optionsKey.defaultValue;
-                defaultedParams.add(key);
-                anyDefaultedParam = true;
-            } else {
-                actualValue = fnToCall(value);
-            }
-            return [key, actualValue];
-        })
-    ) as unknown as LooseAutocomplete<T>, anyDefaultedParam];
+    return [
+        Object.fromEntries(
+            uniqueKeys.map((key) => {
+                let fnToCall: EncodeAndDecodeOptions['decode'] = (value) =>
+                    value;
+                const optionsKey = (options as any)?.[key];
+                if (
+                    typeof optionsKey !== 'boolean' &&
+                    typeof optionsKey?.decode === 'function'
+                ) {
+                    fnToCall = optionsKey.decode;
+                }
+                const value = searchParams?.get(key);
+                let actualValue;
+                if (
+                    browser &&
+                    value == undefined &&
+                    optionsKey?.defaultValue != undefined &&
+                    !defaultedParams.has(key)
+                ) {
+                    actualValue = optionsKey.defaultValue;
+                    defaultedParams.add(key);
+                    anyDefaultedParam = true;
+                } else {
+                    actualValue = fnToCall(value);
+                }
+                return [key, actualValue];
+            })
+        ) as unknown as LooseAutocomplete<T>,
+        anyDefaultedParam,
+    ];
 }
 
 export const ssp = {
@@ -96,16 +117,16 @@ export const ssp = {
     }),
     number: (defaultValue?: number) => ({
         encode: (value: number) => value.toString(),
-        decode: (value: string | null) => value ? parseFloat(value) : null,
+        decode: (value: string | null) => (value ? parseFloat(value) : null),
         defaultValue,
     }),
     boolean: (defaultValue?: boolean) => ({
-        encode: (value: boolean) => value + "",
-        decode: (value: string | null) => value !== null && value !== "false",
+        encode: (value: boolean) => value + '',
+        decode: (value: string | null) => value !== null && value !== 'false',
         defaultValue,
     }),
     string: (defaultValue?: string) => ({
-        encode: (value: string | null) => value ?? "",
+        encode: (value: string | null) => value ?? '',
         decode: (value: string | null) => value,
         defaultValue,
     }),
@@ -116,7 +137,7 @@ export const ssp = {
             if (!value) return null;
             try {
                 return JSON.parse(
-                    decompressFromEncodedURIComponent(value) ?? ""
+                    decompressFromEncodedURIComponent(value) ?? ''
                 );
             } catch (e) {
                 return null;
@@ -138,26 +159,27 @@ const debouncedTimeouts = new Map<string, SetTimeout>();
 
 export function queryParameters<T extends object>(
     options?: Options<T>,
-    {
-        debounceHistory = 0,
-        pushHistory = true,
-    }: StoreOptions = {},
+    { debounceHistory = 0, pushHistory = true }: StoreOptions = {}
 ): Writable<LooseAutocomplete<T>> {
     const { set: _set, subscribe } = writable<LooseAutocomplete<T>>();
-    const setRef: { value: Writable<T>["set"]; } = { value: noop };
+    const setRef: { value: Writable<T>['set'] } = { value: noop };
     const unsubPage = page.subscribe(($page) => {
         setRef.value = (value) => {
+            const hash = $page.url.hash;
             const query = new URLSearchParams($page.url.searchParams);
             const toBatch = (query: URLSearchParams) => {
                 for (const field of Object.keys(value)) {
-
                     if (!(value as any)[field] == undefined) {
                         query.delete(field);
                         continue;
                     }
-                    let fnToCall: EncodeAndDecodeOptions['encode'] = (value) => value.toString();
+                    let fnToCall: EncodeAndDecodeOptions['encode'] = (value) =>
+                        value.toString();
                     const optionsKey = (options as any)?.[field as string];
-                    if (typeof optionsKey !== "boolean" && typeof optionsKey?.encode === 'function') {
+                    if (
+                        typeof optionsKey !== 'boolean' &&
+                        typeof optionsKey?.encode === 'function'
+                    ) {
                         fnToCall = optionsKey.encode;
                     }
                     query.set(field as string, fnToCall((value as any)[field]));
@@ -169,23 +191,28 @@ export function queryParameters<T extends object>(
                 batchedUpdates.forEach((batched) => {
                     batched(query);
                 });
-                clearTimeout(debouncedTimeouts.get("queryParameters"));
-                await goto(`?${query}`, GOTO_OPTIONS);
+                clearTimeout(debouncedTimeouts.get('queryParameters'));
+                await goto(`?${query}${hash}`, GOTO_OPTIONS);
                 if (pushHistory) {
-                    debouncedTimeouts.set("queryParameters", setTimeout(() => {
-                        goto("", GOTO_OPTIONS_PUSH);
-                    }, debounceHistory));
+                    debouncedTimeouts.set(
+                        'queryParameters',
+                        setTimeout(() => {
+                            goto(hash, GOTO_OPTIONS_PUSH);
+                        }, debounceHistory)
+                    );
                 }
                 batchedUpdates.clear();
             });
         };
-        const [valueToSet, anyDefaultedParam] = mixSearchAndOptions($page?.url?.searchParams, options);
+        const [valueToSet, anyDefaultedParam] = mixSearchAndOptions(
+            $page?.url?.searchParams,
+            options
+        );
         if (anyDefaultedParam) {
             setRef.value(valueToSet);
         } else {
             _set(valueToSet);
         }
-
     });
     const sub = (...props: Parameters<typeof subscribe>) => {
         const unsub = subscribe(...props);
@@ -203,13 +230,13 @@ export function queryParameters<T extends object>(
             const currentValue = get({ subscribe });
             const newValue = updater(currentValue);
             setRef.value(newValue);
-        }
+        },
     };
 }
 
 const DEFAULT_ENCODER_DECODER: EncodeAndDecodeOptions = {
     encode: (value) => value.toString(),
-    decode: (value: string | null) => value ? value.toString() : null,
+    decode: (value: string | null) => (value ? value.toString() : null),
 };
 
 export function queryParam<T = string>(
@@ -217,18 +244,16 @@ export function queryParam<T = string>(
     {
         encode: encode = DEFAULT_ENCODER_DECODER.encode,
         decode: decode = DEFAULT_ENCODER_DECODER.decode,
-        defaultValue
+        defaultValue,
     }: EncodeAndDecodeOptions<T> = DEFAULT_ENCODER_DECODER,
-    {
-        debounceHistory = 0,
-        pushHistory = true,
-    }: StoreOptions = {}
+    { debounceHistory = 0, pushHistory = true }: StoreOptions = {}
 ): Writable<T | null> {
     const { set: _set, subscribe } = writable<T | null>();
-    const setRef: { value: Writable<T | null>["set"]; } = { value: noop };
+    const setRef: { value: Writable<T | null>['set'] } = { value: noop };
     const unsubPage = page.subscribe(($page) => {
         const actualParam = $page?.url?.searchParams?.get?.(name);
         setRef.value = (value) => {
+            const hash = $page.url.hash;
             const toBatch = (query: URLSearchParams) => {
                 if (value == undefined) {
                     query.delete(name);
@@ -244,16 +269,24 @@ export function queryParam<T = string>(
                     batched(query);
                 });
                 clearTimeout(debouncedTimeouts.get(name));
-                await goto(`?${query}`, GOTO_OPTIONS);
+                await goto(`?${query}${hash}`, GOTO_OPTIONS);
                 if (pushHistory) {
-                    debouncedTimeouts.set(name, setTimeout(() => {
-                        goto("", GOTO_OPTIONS_PUSH);
-                    }, debounceHistory));
+                    debouncedTimeouts.set(
+                        name,
+                        setTimeout(() => {
+                            goto(hash, GOTO_OPTIONS_PUSH);
+                        }, debounceHistory)
+                    );
                 }
                 batchedUpdates.clear();
             });
         };
-        if (browser && actualParam == undefined && defaultValue != undefined && !defaultedParams.has(name)) {
+        if (
+            browser &&
+            actualParam == undefined &&
+            defaultValue != undefined &&
+            !defaultedParams.has(name)
+        ) {
             _set(defaultValue);
             setRef.value(defaultValue);
             defaultedParams.add(name);
@@ -277,6 +310,6 @@ export function queryParam<T = string>(
             const currentValue = get({ subscribe });
             const newValue = updater(currentValue);
             setRef.value(newValue);
-        }
+        },
     };
 }
