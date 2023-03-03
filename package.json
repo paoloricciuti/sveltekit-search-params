@@ -49,8 +49,8 @@
 	},
 	"type": "module",
 	"peerDependencies": {
-		"svelte": "^3.44.0",
-		"@sveltejs/kit": "^1.0.0"
+		"@sveltejs/kit": "^1.0.0",
+		"svelte": "^3.44.0"
 	},
 	"exports": {
 		"./package.json": "./package.json",
@@ -77,5 +77,8 @@
 				"./package/sveltekit-search-params.d.ts"
 			]
 		}
+	},
+	"dependencies": {
+		"@changesets/cli": "^2.26.0"
 	}
 }
