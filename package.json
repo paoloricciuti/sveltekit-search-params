@@ -1,6 +1,6 @@
 {
 	"name": "sveltekit-search-params",
-	"version": "1.0.8",
+	"version": "1.0.9",
 	"repository": "git+https://github.com/paoloricciuti/sveltekit-search-params.git",
 	"author": "Paolo Ricciuti",
 	"license": "MIT",
@@ -29,7 +29,7 @@
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"lint": "eslint .",
-		"publish": "changeset publish"
+		"publish": "pnpm run build && changeset publish"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-static": "^1.0.0-next.47",
