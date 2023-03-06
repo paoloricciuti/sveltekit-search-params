@@ -1,5 +1,11 @@
 # sveltekit-search-params
 
+## 1.0.8
+
+### Patch Changes
+
+-   b0b4b0a: replublish
+
 ## 1.0.7
 
 ### Patch Changes
