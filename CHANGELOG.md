@@ -1,5 +1,11 @@
 # sveltekit-search-params
 
+## 1.0.10
+
+### Patch Changes
+
+-   33276b7: fixing changeset
+
 ## 1.0.8
 
 ### Patch Changes
