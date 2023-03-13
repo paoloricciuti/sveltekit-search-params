@@ -1,5 +1,11 @@
 # sveltekit-search-params
 
+## 1.0.11
+
+### Patch Changes
+
+-   6f78e87: removed changesets as dependency and add it as dev dependency
+
 ## 1.0.10
 
 ### Patch Changes
