@@ -192,8 +192,8 @@ export function queryParameters<T extends object>(
                     batched(query);
                 });
                 clearTimeout(debouncedTimeouts.get('queryParameters'));
-                await goto(`?${query}${hash}`, GOTO_OPTIONS);
-                if (pushHistory) {
+                if(browser) await goto(`?${query}${hash}`, GOTO_OPTIONS);
+                if (pushHistory && browser) {
                     debouncedTimeouts.set(
                         'queryParameters',
                         setTimeout(() => {
@@ -269,8 +269,8 @@ export function queryParam<T = string>(
                     batched(query);
                 });
                 clearTimeout(debouncedTimeouts.get(name));
-                await goto(`?${query}${hash}`, GOTO_OPTIONS);
-                if (pushHistory) {
+                if(browser) await goto(`?${query}${hash}`, GOTO_OPTIONS);
+                if (pushHistory && browser) {
                     debouncedTimeouts.set(
                         name,
                         setTimeout(() => {
