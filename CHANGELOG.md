@@ -1,5 +1,11 @@
 # sveltekit-search-params
 
+## 1.0.12
+
+### Patch Changes
+
+-   901d9c7: Add client side check before invoking goto
+
 ## 1.0.11
 
 ### Patch Changes
