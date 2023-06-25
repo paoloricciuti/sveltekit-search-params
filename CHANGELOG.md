@@ -1,5 +1,11 @@
 # sveltekit-search-params
 
+## 1.0.13
+
+### Patch Changes
+
+-   8924160: feat: support svelte 4
+
 ## 1.0.12
 
 ### Patch Changes
