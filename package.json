@@ -52,7 +52,7 @@
 	"type": "module",
 	"peerDependencies": {
 		"@sveltejs/kit": "^1.0.0",
-		"svelte": "^3.44.0"
+		"svelte": "^3.55.0 || ^4.0.0"
 	},
 	"exports": {
 		"./package.json": "./package.json",
