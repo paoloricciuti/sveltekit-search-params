@@ -169,7 +169,7 @@ export function queryParameters<T extends object>(
             const query = new URLSearchParams($page.url.searchParams);
             const toBatch = (query: URLSearchParams) => {
                 for (const field of Object.keys(value)) {
-                    if (!(value as any)[field] == undefined) {
+                    if ((value as any)[field] == undefined) {
                         query.delete(field);
                         continue;
                     }
