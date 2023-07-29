@@ -1,5 +1,11 @@
 # sveltekit-search-params
 
+## 1.0.14
+
+### Patch Changes
+
+-   a81535c: Fix undefined not removing params (#31)
+
 ## 1.0.13
 
 ### Patch Changes
