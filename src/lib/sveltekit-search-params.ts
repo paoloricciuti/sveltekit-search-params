@@ -25,7 +25,7 @@ const GOTO_OPTIONS_PUSH = {
 };
 
 export type EncodeAndDecodeOptions<T = any> = {
-    encode: (value: T) => string;
+    encode: (value: T) => string | undefined;
     decode: (value: string | null) => T | null;
     defaultValue?: T;
 };
@@ -182,7 +182,12 @@ export function queryParameters<T extends object>(
                     ) {
                         fnToCall = optionsKey.encode;
                     }
-                    query.set(field as string, fnToCall((value as any)[field]));
+                    let newValue = fnToCall((value as any)[field]);
+                    if (newValue == undefined) {
+                        query.delete(field as string);
+                    } else {
+                        query.set(field as string, newValue);
+                    }
                 }
             };
             batchedUpdates.add(toBatch);
@@ -258,7 +263,12 @@ export function queryParam<T = string>(
                 if (value == undefined) {
                     query.delete(name);
                 } else {
-                    query.set(name, encode(value));
+                    let newValue = encode(value);
+                    if (newValue == undefined) {
+                        query.delete(name);
+                    } else {
+                        query.set(name, newValue);
+                    }
                 }
             };
             batchedUpdates.add(toBatch);
