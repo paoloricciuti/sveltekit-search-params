@@ -1,5 +1,11 @@
 # sveltekit-search-params
 
+## 1.0.15
+
+### Patch Changes
+
+-   2e7f889: Allow returning undefined from encode to remove param from URL
+
 ## 1.0.14
 
 ### Patch Changes
