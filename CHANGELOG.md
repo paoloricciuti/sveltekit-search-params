@@ -1,5 +1,11 @@
 # sveltekit-search-params
 
+## 1.0.16
+
+### Patch Changes
+
+-   b606180: fix: type ssp array
+
 ## 1.0.15
 
 ### Patch Changes
