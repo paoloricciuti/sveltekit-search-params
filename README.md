@@ -28,7 +28,7 @@ If you want the fastest way to open a PR try out Codeflow
 
 ## Authors
 
-- [@paoloricciuti](https://www.github.com/paoloricciuti)
+-   [@paoloricciuti](https://www.github.com/paoloricciuti)
 
 ## Installation
 
@@ -162,7 +162,6 @@ The count is {$count}
 <input bind:value={$count} type="number"/>
 ```
 
-
 ### Simple case (all parameters)
 
 You can use the function queryParameters to get an object containing all the present search params.
@@ -183,8 +182,8 @@ assuming the page is `/?framework=svelte&isCool=true` the above code will show
 
 ```json
 {
-  "framework": "svelte",
-  "isCool": "true"
+	"framework": "svelte",
+	"isCool": "true"
 }
 ```
 
@@ -233,9 +232,9 @@ assuming the page is `/?framework=svelte&isCool=true` the above code will show
 
 ```json
 {
-  "framework": "svelte",
-  "isCool": "true",
-  "username": null
+	"framework": "svelte",
+	"isCool": "true",
+	"username": null
 }
 ```
 
@@ -243,9 +242,9 @@ if we add username to the URL like this `/?framework=svelte&isCool=true&username
 
 ```json
 {
-  "framework": "svelte",
-  "isCool": "true",
-  "username": "paoloricciuti"
+	"framework": "svelte",
+	"isCool": "true",
+	"username": "paoloricciuti"
 }
 ```
 
@@ -276,9 +275,9 @@ assuming the page is `/?framework=svelte&isCool=true&username=paoloricciuti` the
 
 ```json
 {
-  "framework": "svelte",
-  "isCool": true,
-  "username": null
+	"framework": "svelte",
+	"isCool": true,
+	"username": null
 }
 ```
 
@@ -286,9 +285,9 @@ notice that this time isCool it's a boolean and not a string anymore. With this 
 
 ```json
 {
-  "framework": "svelte",
-  "isCool": false,
-  "username": null
+	"framework": "svelte",
+	"isCool": false,
+	"username": null
 }
 ```
 
@@ -413,12 +412,12 @@ To set the configuration object you can pass it as a third parameter in case of 
 If you ran into issues with vite you need to update your `vite.config.ts` or `vite.config.js` file to include the plugin exported from `sveltekit-search-params/plugin`. It's as simple as
 
 ```javascript
-import { sveltekit } from "@sveltejs/kit/vite";
-import { ssp } from "sveltekit-search-params/plugin";
+import { sveltekit } from '@sveltejs/kit/vite';
+import { ssp } from 'sveltekit-search-params/plugin';
 
 /** @type {import('vite').UserConfig} */
 const config = {
-  plugins: [ssp(), sveltekit()],
+	plugins: [ssp(), sveltekit()],
 };
 
 export default config;
