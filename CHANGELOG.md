@@ -1,5 +1,11 @@
 # sveltekit-search-params
 
+## 1.0.17
+
+### Patch Changes
+
+-   cc1ad2a: rework the library to use a derived store to solve some issue
+
 ## 1.0.16
 
 ### Patch Changes
