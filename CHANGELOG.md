@@ -1,5 +1,11 @@
 # sveltekit-search-params
 
+## 1.0.18
+
+### Patch Changes
+
+-   ac0a8c3: extend peer dep sveltekit to 2.0
+
 ## 1.0.17
 
 ### Patch Changes
