@@ -46,9 +46,9 @@ The simplest and most effective way to use this library is by importing the meth
 
 ```svelte
 <script lang="ts">
-    import { queryParam } from "sveltekit-search-params";
+	import { queryParam } from 'sveltekit-search-params';
 
-    const username = queryParam("username");
+	const username = queryParam('username');
 </script>
 
 Your username is {$username}
@@ -62,9 +62,9 @@ Reading query parameters is cool but you know what is even cooler? Writing query
 
 ```svelte
 <script lang="ts">
-    import { queryParam } from "sveltekit-search-params";
+	import { queryParam } from 'sveltekit-search-params';
 
-    const username = queryParam("username");
+	const username = queryParam('username');
 </script>
 
 Your username is {$username}
@@ -75,16 +75,18 @@ or if you prefer
 
 ```svelte
 <script lang="ts">
-    import { queryParam } from "sveltekit-search-params";
+	import { queryParam } from 'sveltekit-search-params';
 
-    const username = queryParam("username");
+	const username = queryParam('username');
 </script>
 
-
 Your username is {$username}
-<input value={$username} on:input={(e)=>{
-    $username = e.target.value;
-}} />
+<input
+	value={$username}
+	on:input={(e) => {
+		$username = e.target.value;
+	}}
+/>
 ```
 
 ### Encoding and decoding
@@ -93,16 +95,16 @@ By default query parameters are strings but more often than not tho we are not w
 
 ```svelte
 <script lang="ts">
-    import { queryParam } from "sveltekit-search-params";
+	import { queryParam } from 'sveltekit-search-params';
 
-    const count = queryParam("count", {
-        encode: (value: number) => value.toString(),
-        decode: (value: string | null) => value ? parseInt(value) : null,
-    });
+	const count = queryParam('count', {
+		encode: (value: number) => value.toString(),
+		decode: (value: string | null) => (value ? parseInt(value) : null),
+	});
 </script>
 
 The count is {$count}
-<input bind:value={$count} type="number"/>
+<input bind:value={$count} type="number" />
 ```
 
 this time $count would be of type number and the deconding function it's what's used to update the url when you write to the store.
@@ -113,17 +115,17 @@ Sometimes when we want to create a new variable we like to pass a default value.
 
 ```svelte
 <script lang="ts">
-    import { queryParam } from "sveltekit-search-params";
+	import { queryParam } from 'sveltekit-search-params';
 
-    const count = queryParam("count", {
-        encode: (value: number) => value.toString(),
-        decode: (value: string | null) => value ? parseInt(value) : null,
-        defaultValue: 10,
-    });
+	const count = queryParam('count', {
+		encode: (value: number) => value.toString(),
+		decode: (value: string | null) => (value ? parseInt(value) : null),
+		defaultValue: 10,
+	});
 </script>
 
 The count is {$count}
-<input bind:value={$count} type="number"/>
+<input bind:value={$count} type="number" />
 ```
 
 this will make the query parameter change as soon as the page is rendered on the browser (the query parameter will change only if it's not already present and only the first time the application render).
@@ -138,13 +140,13 @@ Write an encode and decode function may seem trivial but it's tedious for sure. 
 
 ```svelte
 <script lang="ts">
-    import { ssp, queryParam } from "sveltekit-search-params";
+	import { ssp, queryParam } from 'sveltekit-search-params';
 
-    const count = queryParam("count", ssp.number());
+	const count = queryParam('count', ssp.number());
 </script>
 
 The count is {$count}
-<input bind:value={$count} type="number"/>
+<input bind:value={$count} type="number" />
 ```
 
 this code will produce the same output as the code written above but far more readable and easier to read. You can find all the exports documented in the section [ssp - Helpers](#ssp---helpers).
@@ -153,13 +155,13 @@ You can also pass a default value to the function that will be the defaultValue 
 
 ```svelte
 <script lang="ts">
-    import { ssp, queryParam } from "sveltekit-search-params";
+	import { ssp, queryParam } from 'sveltekit-search-params';
 
-    const count = queryParam("count", ssp.number(10));
+	const count = queryParam('count', ssp.number(10));
 </script>
 
 The count is {$count}
-<input bind:value={$count} type="number"/>
+<input bind:value={$count} type="number" />
 ```
 
 ### Simple case (all parameters)
@@ -168,9 +170,9 @@ You can use the function queryParameters to get an object containing all the pre
 
 ```svelte
 <script lang="ts">
-    import { queryParameters } from "sveltekit-search-params";
+	import { queryParameters } from 'sveltekit-search-params';
 
-    const store = queryParameters();
+	const store = queryParameters();
 </script>
 
 <pre>
@@ -195,17 +197,20 @@ Just like with the single parameter case you can just update the store and the U
 
 ```svelte
 <script lang="ts">
-    import { queryParameters } from "sveltekit-search-params";
+	import { queryParameters } from 'sveltekit-search-params';
 
-    const store = queryParameters();
+	const store = queryParameters();
 </script>
 
 <pre>
     {JSON.stringify($store, null, 2)}
 </pre>
-<input value={$store.username} on:input={(e)=>{
-    $store.username = e.target.value;
-}} />
+<input
+	value={$store.username}
+	on:input={(e) => {
+		$store.username = e.target.value;
+	}}
+/>
 ```
 
 writing in the input will update the state and the URL at the same time.
@@ -216,11 +221,11 @@ Most of the times if you need to read from query parameters you are expecting so
 
 ```svelte
 <script lang="ts">
-    import { queryParameters } from "sveltekit-search-params";
+	import { queryParameters } from 'sveltekit-search-params';
 
-    const store = queryParameters({
-        username: true,
-    });
+	const store = queryParameters({
+		username: true,
+	});
 </script>
 
 <pre>
@@ -254,16 +259,17 @@ The parameter passed to `queryParameters` can aslo be used to specify the encodi
 
 ```svelte
 <script lang="ts">
-    import { queryParameters } from "sveltekit-search-params";
+	import { queryParameters } from 'sveltekit-search-params';
 
-    const store = queryParameters({
-        username: true,
-        isCool: {
-            encode: (booleanValue) => booleanValue.toString(),
-            decode: (stringValue) => stringValue !== null && stringValue !== "false",
-            defautValue: true,
-        }
-    });
+	const store = queryParameters({
+		username: true,
+		isCool: {
+			encode: (booleanValue) => booleanValue.toString(),
+			decode: (stringValue) =>
+				stringValue !== null && stringValue !== 'false',
+			defautValue: true,
+		},
+	});
 </script>
 
 <pre>
@@ -297,12 +303,12 @@ Obviously also in this case you can use the helpers functions provided inside `s
 
 ```svelte
 <script lang="ts">
-    import { ssp, queryParameters } from "sveltekit-search-params";
+	import { ssp, queryParameters } from 'sveltekit-search-params';
 
-    const store = queryParameters({
-        username: true,
-        isCool: ssp.boolean(true),
-    });
+	const store = queryParameters({
+		username: true,
+		isCool: ssp.boolean(true),
+	});
 </script>
 
 <pre>
@@ -385,25 +391,32 @@ The number of milliseconds to delay the writing of the history when the state ch
 
 A boolean defining if the history have to be written at all. If set to false no new history entries will be written to the history stack (the URL will still update but the user will not be able to go back with the browser).
 
+### sort
+
+Whenever you interacts with a store it navigates for you. By default the search params are sorted to allow for better cache-ability. You can disable this behavior by passing `false` to this option. Keep in mind that this is a per-store settings. This mean that if you interact with a store that has this option set to `false` and than interact with one that has this option set to `true` (the default) the resulting URL will still have the search params sorted.
+
 ### How to use it
 
 To set the configuration object you can pass it as a third parameter in case of `queryParam` or the second in case of `queryParameters`.
 
 ```svelte
 <script lang="ts">
-    import { ssp, queryParameters, queryParam } from "sveltekit-search-params";
-    const name = queryParam("name", ssp.string(), {
-        debounceHistory: 500, //a new history entry will be created after 500ms of this store not changing
-    });
-    const count = queryParam("count", ssp.number(), {
-        debounceHistory: 1500, //a new history entry will be created after 1500ms of this store not changing
-    })
-    const store = queryParameters({
-        username: true,
-        isCool: ssp.boolean(true),
-    }, {
-        pushHistory: false, //no new history entries for this store
-    });
+	import { ssp, queryParameters, queryParam } from 'sveltekit-search-params';
+	const name = queryParam('name', ssp.string(), {
+		debounceHistory: 500, //a new history entry will be created after 500ms of this store not changing
+	});
+	const count = queryParam('count', ssp.number(), {
+		debounceHistory: 1500, //a new history entry will be created after 1500ms of this store not changing
+	});
+	const store = queryParameters(
+		{
+			username: true,
+			isCool: ssp.boolean(true),
+		},
+		{
+			pushHistory: false, //no new history entries for this store
+		},
+	);
 </script>
 ```
 

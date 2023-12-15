@@ -116,6 +116,41 @@ test.describe('queryParam', () => {
 		expect(url.searchParams.get('str')).toBe('one');
 		expect(url.searchParams.get('num')).toBe('42');
 	});
+
+	test('parameters are kept in alphabetical order by default', async ({
+		page,
+	}) => {
+		await page.goto('/?num=0');
+		const arr_btn = page.getByTestId('arr-input');
+		const btn = page.getByTestId('num');
+		await btn.click();
+		await arr_btn.click();
+		const url = new URL(page.url());
+		expect(url.search).toBe('?arr=%5B0%5D&num=1');
+	});
+
+	test('parameters are not ordered if updated through a store that has specifically set sort to false', async ({
+		page,
+	}) => {
+		await page.goto('/');
+		const input = page.getByTestId('str-input');
+		await input.fill('str');
+		const btn = page.getByTestId('arr-unordered-input');
+		await btn.click();
+		const arr = page.getByTestId('arr-unordered');
+		expect(await arr.count()).toBe(1);
+		let url = new URL(page.url());
+		expect(url.searchParams.get('arr-unordered')).toBe('[0]');
+		expect(url.searchParams.get('str')).toBe('str');
+		expect(url.search).toBe('?str=str&arr-unordered=%5B0%5D');
+
+		// expect them to be ordered if you access an ordered store
+		await input.fill('string');
+		url = new URL(page.url());
+		expect(url.searchParams.get('arr-unordered')).toBe('[0]');
+		expect(url.searchParams.get('str')).toBe('string');
+		expect(url.search).toBe('?arr-unordered=%5B0%5D&str=string');
+	});
 });
 
 test.describe('queryParameters', () => {
@@ -232,5 +267,42 @@ test.describe('queryParameters', () => {
 		const url = new URL(page.url());
 		expect(url.searchParams.get('str')).toBe('one');
 		expect(url.searchParams.get('num')).toBe('42');
+	});
+
+	test('parameters are kept in alphabetical order by default', async ({
+		page,
+	}) => {
+		await page.goto('/queryparameters?num=0');
+		const arr_btn = page.getByTestId('arr-input');
+		const btn = page.getByTestId('num');
+		await btn.click();
+		await arr_btn.click();
+		const url = new URL(page.url());
+		expect(url.search).toBe('?arr=%5B0%5D&bools=false&num=1');
+	});
+
+	test('parameters are not ordered if updated through a store that has specifically set sort to false', async ({
+		page,
+	}) => {
+		await page.goto('/queryparameters');
+		const input = page.getByTestId('str-input');
+		await input.fill('str');
+		const btn = page.getByTestId('arr-unordered-input');
+		await btn.click();
+		const arr = page.getByTestId('arr-unordered');
+		expect(await arr.count()).toBe(1);
+		let url = new URL(page.url());
+		expect(url.searchParams.get('arr-unordered')).toBe('[0]');
+		expect(url.searchParams.get('str')).toBe('str');
+		expect(url.search).toBe('?bools=false&str=str&arr-unordered=%5B0%5D');
+
+		// expect them to be ordered if you access an ordered store
+		await input.fill('string');
+		url = new URL(page.url());
+		expect(url.searchParams.get('arr-unordered')).toBe('[0]');
+		expect(url.searchParams.get('str')).toBe('string');
+		expect(url.search).toBe(
+			'?arr-unordered=%5B0%5D&bools=false&str=string',
+		);
 	});
 });
