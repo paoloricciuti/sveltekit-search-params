@@ -267,7 +267,7 @@ The parameter passed to `queryParameters` can aslo be used to specify the encodi
 			encode: (booleanValue) => booleanValue.toString(),
 			decode: (stringValue) =>
 				stringValue !== null && stringValue !== 'false',
-			defautValue: true,
+			defaultValue: true,
 		},
 	});
 </script>
