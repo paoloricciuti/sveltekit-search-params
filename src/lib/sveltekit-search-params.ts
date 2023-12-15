@@ -30,6 +30,7 @@ export type EncodeAndDecodeOptions<T = any> = {
 export type StoreOptions = {
 	debounceHistory?: number;
 	pushHistory?: boolean;
+	sort?: boolean;
 };
 
 type LooseAutocomplete<T> = {
@@ -156,7 +157,7 @@ const debouncedTimeouts = new Map<string, SetTimeout>();
 
 export function queryParameters<T extends object>(
 	options?: Options<T>,
-	{ debounceHistory = 0, pushHistory = true }: StoreOptions = {},
+	{ debounceHistory = 0, pushHistory = true, sort = true }: StoreOptions = {},
 ): Writable<LooseAutocomplete<T>> {
 	function set(value: T) {
 		if (!browser) return;
@@ -192,11 +193,19 @@ export function queryParameters<T extends object>(
 				batched(query);
 			});
 			clearTimeout(debouncedTimeouts.get('queryParameters'));
-			if (browser) await goto(`?${query}${hash}`, GOTO_OPTIONS);
+			if (browser) {
+				if (sort) {
+					query.sort();
+				}
+				await goto(`?${query}${hash}`, GOTO_OPTIONS);
+			}
 			if (pushHistory && browser) {
 				debouncedTimeouts.set(
 					'queryParameters',
 					setTimeout(() => {
+						if (sort) {
+							query.sort();
+						}
 						goto(hash, GOTO_OPTIONS_PUSH);
 					}, debounceHistory),
 				);
@@ -237,7 +246,7 @@ export function queryParam<T = string>(
 		decode: decode = DEFAULT_ENCODER_DECODER.decode,
 		defaultValue,
 	}: EncodeAndDecodeOptions<T> = DEFAULT_ENCODER_DECODER,
-	{ debounceHistory = 0, pushHistory = true }: StoreOptions = {},
+	{ debounceHistory = 0, pushHistory = true, sort = true }: StoreOptions = {},
 ): Writable<T | null> {
 	function set(value: T | null) {
 		if (!browser) return;
@@ -262,11 +271,19 @@ export function queryParam<T = string>(
 				batched(query);
 			});
 			clearTimeout(debouncedTimeouts.get(name));
-			if (browser) await goto(`?${query}${hash}`, GOTO_OPTIONS);
+			if (browser) {
+				if (sort) {
+					query.sort();
+				}
+				await goto(`?${query}${hash}`, GOTO_OPTIONS);
+			}
 			if (pushHistory && browser) {
 				debouncedTimeouts.set(
 					name,
 					setTimeout(() => {
+						if (sort) {
+							query.sort();
+						}
 						goto(hash, GOTO_OPTIONS_PUSH);
 					}, debounceHistory),
 				);

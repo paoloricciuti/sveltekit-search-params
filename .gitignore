@@ -9,3 +9,4 @@ node_modules
 
 # Local Netlify folder
 .netlify
+test-results

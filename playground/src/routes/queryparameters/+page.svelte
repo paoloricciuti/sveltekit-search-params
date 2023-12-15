@@ -9,6 +9,15 @@
 		arr: ssp.array<number>(),
 		lz: ssp.lz<string>(),
 	});
+
+	const unordered_store = queryParameters(
+		{
+			'arr-unordered': ssp.array<number>(),
+		},
+		{
+			sort: false,
+		},
+	);
 </script>
 
 <input data-testid="str-input" bind:value={$store.str} />
@@ -43,6 +52,24 @@
 <ul>
 	{#each $store.arr ?? [] as num}
 		<li data-testid="arr">{num}</li>
+	{/each}
+</ul>
+
+<button
+	on:click={() => {
+		if (!$unordered_store['arr-unordered']) {
+			$unordered_store['arr-unordered'] = [];
+		}
+		$unordered_store['arr-unordered'].push(
+			$unordered_store['arr-unordered'].length,
+		);
+		$unordered_store['arr-unordered'] = $unordered_store['arr-unordered'];
+	}}
+	data-testid="arr-unordered-input">Add unordered array</button
+>
+<ul>
+	{#each $unordered_store['arr-unordered'] ?? [] as num}
+		<li data-testid="arr-unordered">{num}</li>
 	{/each}
 </ul>
 
