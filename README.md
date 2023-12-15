@@ -393,7 +393,7 @@ A boolean defining if the history have to be written at all. If set to false no 
 
 ### sort
 
-Whenever you interacts with a store it navigates for you. By default the search params are sorted to allow for better cache-ability. You can disable this behavior by passing `false` to this option. Keep in mind that this is a per-store settings. This mean that if you interact with a store that has this option set to `false` and than interact with one that has this option set to `true` (the default) the resulting URL will still have the search params sorted.
+Whenever you interact with a store, it navigates for you. By default the search params are sorted to allow for better cache-ability. You can disable this behavior by passing `false` to this option. Keep in mind that this is a per-store settings. This mean that if you interact with a store that has this option set to `false` and than interact with one that has this option set to `true` (the default) the resulting URL will still have the search params sorted.
 
 ### How to use it
 
