@@ -26,7 +26,7 @@
 		"version:major": "npm version major",
 		"build:landing": "vite build",
 		"build": "svelte-kit sync && svelte-package -o package",
-		"build:playground": "cd playground && pnpm run build",
+		"build:playground": "cd playground && pnpm install --frozen-lockfile && pnpm run build",
 		"preview:playground": "cd playground && pnpm run preview",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
