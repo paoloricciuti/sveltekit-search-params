@@ -1,5 +1,11 @@
 # sveltekit-search-params
 
+## 1.1.0
+
+### Minor Changes
+
+-   7a99cd8: feat: sorting search params before navigating
+
 ## 1.0.18
 
 ### Patch Changes
