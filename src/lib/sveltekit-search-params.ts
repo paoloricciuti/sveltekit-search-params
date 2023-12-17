@@ -70,13 +70,10 @@ function mixSearchAndOptions<T>(
 				const value = searchParams?.get(key);
 				let actualValue;
 				if (
-					browser &&
 					value == undefined &&
-					optionsKey?.defaultValue != undefined &&
-					!defaultedParams.has(key)
+					optionsKey?.defaultValue != undefined
 				) {
 					actualValue = optionsKey.defaultValue;
-					defaultedParams.add(key);
 					anyDefaultedParam = true;
 				} else {
 					actualValue = fnToCall(value);
@@ -150,8 +147,6 @@ type SetTimeout = ReturnType<typeof setTimeout>;
 const batchedUpdates = new Set<(query: URLSearchParams) => void>();
 
 let batchTimeout: SetTimeout;
-
-const defaultedParams = new Set<string>();
 
 const debouncedTimeouts = new Map<string, SetTimeout>();
 
@@ -294,14 +289,8 @@ export function queryParam<T = string>(
 
 	const { subscribe } = derived(page, ($page) => {
 		const actualParam = $page?.url?.searchParams?.get?.(name);
-		if (
-			browser &&
-			actualParam == undefined &&
-			defaultValue != undefined &&
-			!defaultedParams.has(name)
-		) {
+		if (actualParam == undefined && defaultValue != undefined) {
 			set(defaultValue);
-			defaultedParams.add(name);
 			return defaultValue;
 		}
 		return decode(actualParam);
