@@ -306,3 +306,42 @@ test.describe('queryParameters', () => {
 		);
 	});
 });
+
+test.describe('default values', () => {
+	test('defaults redirect immediately to the correct url if js is enabled', async ({
+		page,
+	}) => {
+		await page.goto('/default');
+		await page.waitForURL((url) => {
+			return (
+				url.searchParams.get('str') === 'def' &&
+				url.searchParams.get('num') === '42' &&
+				url.searchParams.get('str2') === 'str2'
+			);
+		});
+		const str = page.getByTestId('str');
+		const num = page.getByTestId('num');
+		const str2 = page.getByTestId('str2');
+		await expect(str).toHaveText('def');
+		await expect(num).toHaveText('42');
+		await expect(str2).toHaveText('str2');
+	});
+});
+
+test.describe('default values during ssr', () => {
+	test.use({
+		javaScriptEnabled: false,
+	});
+
+	test("defaults don' redirect but the value is still present", async ({
+		page,
+	}) => {
+		await page.goto('/default');
+		const str = page.getByTestId('str');
+		const num = page.getByTestId('num');
+		const str2 = page.getByTestId('str2');
+		await expect(str).toHaveText('def');
+		await expect(num).toHaveText('42');
+		await expect(str2).toHaveText('str2');
+	});
+});
