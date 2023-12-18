@@ -3,7 +3,13 @@
 import { browser } from '$app/environment';
 import { goto } from '$app/navigation';
 import { page } from '$app/stores';
-import { derived, get, type Updater, type Writable } from 'svelte/store';
+import {
+	derived,
+	get,
+	writable,
+	type Updater,
+	type Writable,
+} from 'svelte/store';
 import {
 	compressToEncodedURIComponent,
 	decompressFromEncodedURIComponent,
@@ -31,6 +37,7 @@ export type StoreOptions = {
 	debounceHistory?: number;
 	pushHistory?: boolean;
 	sort?: boolean;
+	showDefaults?: boolean;
 };
 
 type LooseAutocomplete<T> = {
@@ -43,8 +50,13 @@ type Options<T> = {
 	[Key in keyof T]: EncodeAndDecodeOptions<T[Key]> | boolean;
 };
 
+type Overrides<T> = {
+	[Key in keyof T]?: T[Key] | null;
+};
+
 function mixSearchAndOptions<T>(
 	searchParams: URLSearchParams,
+	overrides: Overrides<T>,
 	options?: Options<T>,
 ): [LooseAutocomplete<T>, boolean] {
 	const uniqueKeys = Array.from(
@@ -58,6 +70,9 @@ function mixSearchAndOptions<T>(
 	return [
 		Object.fromEntries(
 			uniqueKeys.map((key) => {
+				if ((overrides as any)[key] != undefined) {
+					return [key, (overrides as any)[key]];
+				}
 				let fnToCall: EncodeAndDecodeOptions['decode'] = (value) =>
 					value;
 				const optionsKey = (options as any)?.[key];
@@ -152,10 +167,19 @@ const debouncedTimeouts = new Map<string, SetTimeout>();
 
 export function queryParameters<T extends object>(
 	options?: Options<T>,
-	{ debounceHistory = 0, pushHistory = true, sort = true }: StoreOptions = {},
+	{
+		debounceHistory = 0,
+		pushHistory = true,
+		sort = true,
+		showDefaults = true,
+	}: StoreOptions = {},
 ): Writable<LooseAutocomplete<T>> {
-	function set(value: T) {
+	const overrides = writable<Overrides<T>>({});
+	let firstTime = true;
+
+	function _set(value: T, changeImmediately?: boolean) {
 		if (!browser) return;
+		firstTime = false;
 		const hash = window.location.hash;
 		const query = new URLSearchParams(window.location.search);
 		const toBatch = (query: URLSearchParams) => {
@@ -189,42 +213,47 @@ export function queryParameters<T extends object>(
 			});
 			clearTimeout(debouncedTimeouts.get('queryParameters'));
 			if (browser) {
-				if (sort) {
-					query.sort();
-				}
-				await goto(`?${query}${hash}`, GOTO_OPTIONS);
-			}
-			if (pushHistory && browser) {
+				overrides.set(value);
 				debouncedTimeouts.set(
 					'queryParameters',
-					setTimeout(() => {
-						if (sort) {
-							query.sort();
-						}
-						goto(hash, GOTO_OPTIONS_PUSH);
-					}, debounceHistory),
+					setTimeout(
+						async () => {
+							if (sort) {
+								query.sort();
+							}
+							await goto(
+								`?${query}${hash}`,
+								pushHistory ? GOTO_OPTIONS_PUSH : GOTO_OPTIONS,
+							);
+							overrides.set({});
+						},
+						changeImmediately ? 0 : debounceHistory,
+					),
 				);
 			}
 			batchedUpdates.clear();
 		});
 	}
-	const { subscribe } = derived(page, ($page) => {
+	const { subscribe } = derived([page, overrides], ([$page, $overrides]) => {
 		const [valueToSet, anyDefaultedParam] = mixSearchAndOptions(
 			$page?.url?.searchParams,
+			$overrides,
 			options,
 		);
-		if (anyDefaultedParam) {
-			set(valueToSet);
+		if (anyDefaultedParam && showDefaults) {
+			_set(valueToSet, firstTime);
 		}
 		return valueToSet;
 	});
 	return {
-		set,
+		set(newValue) {
+			_set(newValue);
+		},
 		subscribe,
 		update: (updater: Updater<LooseAutocomplete<T>>) => {
 			const currentValue = get({ subscribe });
 			const newValue = updater(currentValue);
-			set(newValue);
+			_set(newValue);
 		},
 	};
 }
@@ -241,10 +270,18 @@ export function queryParam<T = string>(
 		decode: decode = DEFAULT_ENCODER_DECODER.decode,
 		defaultValue,
 	}: EncodeAndDecodeOptions<T> = DEFAULT_ENCODER_DECODER,
-	{ debounceHistory = 0, pushHistory = true, sort = true }: StoreOptions = {},
+	{
+		debounceHistory = 0,
+		pushHistory = true,
+		sort = true,
+		showDefaults = true,
+	}: StoreOptions = {},
 ): Writable<T | null> {
-	function set(value: T | null) {
+	const override = writable<T | null>(null);
+	let firstTime = true;
+	function _set(value: T | null, changeImmediately?: boolean) {
 		if (!browser) return;
+		firstTime = false;
 		const hash = window.location.hash;
 		const toBatch = (query: URLSearchParams) => {
 			if (value == undefined) {
@@ -267,41 +304,50 @@ export function queryParam<T = string>(
 			});
 			clearTimeout(debouncedTimeouts.get(name));
 			if (browser) {
-				if (sort) {
-					query.sort();
-				}
-				await goto(`?${query}${hash}`, GOTO_OPTIONS);
-			}
-			if (pushHistory && browser) {
+				override.set(value);
 				debouncedTimeouts.set(
 					name,
-					setTimeout(() => {
-						if (sort) {
-							query.sort();
-						}
-						goto(hash, GOTO_OPTIONS_PUSH);
-					}, debounceHistory),
+					setTimeout(
+						async () => {
+							if (sort) {
+								query.sort();
+							}
+							await goto(
+								`?${query}${hash}`,
+								pushHistory ? GOTO_OPTIONS_PUSH : GOTO_OPTIONS,
+							);
+							override.set(null);
+						},
+						changeImmediately ? 0 : debounceHistory,
+					),
 				);
 			}
 			batchedUpdates.clear();
 		});
 	}
 
-	const { subscribe } = derived(page, ($page) => {
+	const { subscribe } = derived([page, override], ([$page, $override]) => {
+		if ($override) {
+			return $override;
+		}
 		const actualParam = $page?.url?.searchParams?.get?.(name);
 		if (actualParam == undefined && defaultValue != undefined) {
-			set(defaultValue);
+			if (showDefaults) {
+				_set(defaultValue, firstTime);
+			}
 			return defaultValue;
 		}
 		return decode(actualParam);
 	});
 	return {
-		set,
+		set(newValue) {
+			_set(newValue);
+		},
 		subscribe,
 		update: (updater: Updater<T | null>) => {
 			const currentValue = get({ subscribe });
 			const newValue = updater(currentValue);
-			set(newValue);
+			_set(newValue);
 		},
 	};
 }

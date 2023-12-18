@@ -308,7 +308,7 @@ test.describe('queryParameters', () => {
 });
 
 test.describe('default values', () => {
-	test('defaults redirect immediately to the correct url if js is enabled', async ({
+	test("defaults redirect immediately to the correct url if js is enabled but it doesn't show the paramaters where showDefaults is false", async ({
 		page,
 	}) => {
 		await page.goto('/default');
@@ -320,11 +320,66 @@ test.describe('default values', () => {
 			);
 		});
 		const str = page.getByTestId('str');
+		const str_no_show = page.getByTestId('str-no-show');
 		const num = page.getByTestId('num');
 		const str2 = page.getByTestId('str2');
+		const str2_no_show = page.getByTestId('str2-no-show');
 		await expect(str).toHaveText('def');
 		await expect(num).toHaveText('42');
 		await expect(str2).toHaveText('str2');
+		const url = new URL(page.url());
+		await expect(str_no_show).toHaveText('no-show');
+		await expect(str2_no_show).toHaveText('str2-no-show');
+		expect(url.searchParams.get('str-no-show')).toBeNull();
+		expect(url.searchParams.get('str2-no-show')).toBeNull();
+	});
+});
+
+test.describe('debounce history entry', () => {
+	test('debounce update the url only after 1000ms (set on the store)', async ({
+		page,
+	}) => {
+		await page.goto('/debounce?num=0');
+		const str = page.getByTestId('str');
+		const input = page.getByTestId('str-input');
+		await input.fill('str');
+		let url = new URL(page.url());
+		await expect(str).toHaveText('str');
+		expect(url.searchParams.get('str')).toBeNull();
+		await new Promise((r) => setTimeout(r, 1100));
+		url = new URL(page.url());
+		expect(url.searchParams.get('str')).toBe('str');
+
+		const num = page.getByTestId('num');
+		await num.click();
+		url = new URL(page.url());
+		await expect(num).toHaveText('1');
+		expect(url.searchParams.get('num')).toBe('0');
+		await new Promise((r) => setTimeout(r, 1100));
+		url = new URL(page.url());
+		expect(url.searchParams.get('num')).toBe('1');
+
+		const str2 = page.getByTestId('str2');
+		const str2_input = page.getByTestId('str2-input');
+		await str2_input.fill('str2');
+		url = new URL(page.url());
+		await expect(str2).toHaveText('str2');
+		expect(url.searchParams.get('str2')).toBeNull();
+		await new Promise((r) => setTimeout(r, 1100));
+		url = new URL(page.url());
+		expect(url.searchParams.get('str2')).toBe('str2');
+
+		const change_both = page.getByTestId('change-both');
+		await change_both.click();
+		url = new URL(page.url());
+		await expect(str2).toHaveText('changed');
+		await expect(num).toHaveText('2');
+		expect(url.searchParams.get('str2')).toBe('str2');
+		expect(url.searchParams.get('num')).toBe('1');
+		await new Promise((r) => setTimeout(r, 1100));
+		url = new URL(page.url());
+		expect(url.searchParams.get('str2')).toBe('changed');
+		expect(url.searchParams.get('num')).toBe('2');
 	});
 });
 
@@ -333,7 +388,7 @@ test.describe('default values during ssr', () => {
 		javaScriptEnabled: false,
 	});
 
-	test("defaults don' redirect but the value is still present", async ({
+	test("defaults don't redirect but the value is still present", async ({
 		page,
 	}) => {
 		await page.goto('/default');

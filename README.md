@@ -395,6 +395,32 @@ A boolean defining if the history have to be written at all. If set to false no 
 
 Whenever you interact with a store, it navigates for you. By default the search params are sorted to allow for better cache-ability. You can disable this behavior by passing `false` to this option. Keep in mind that this is a per-store settings. This mean that if you interact with a store that has this option set to `false` and than interact with one that has this option set to `true` (the default) the resulting URL will still have the search params sorted.
 
+### showDefaults
+
+If you specify a default value for the search param and it's not present by default the library will immediately navigate to the url that contains the default search param. For example if you have this code
+
+```svelte
+<script lang="ts">
+	import { queryParam, ssp } from 'sveltekit-search-params';
+
+	const pageNum = queryParam('pageNum', ssp.number(0));
+</script>
+```
+
+and you navigate to `/` as soon as the page load it will be redirected to `/?pageNum=0`. If you prefer not to show the defaults in the URL you can set the `showDefaults` option to false.
+
+```svelte
+<script lang="ts">
+	import { queryParam, ssp } from 'sveltekit-search-params';
+
+	const pageNum = queryParam('pageNum', ssp.number(0), {
+		showDefaults: false,
+	});
+</script>
+```
+
+By doing so the store will still have a value of 0 if the search param is not present but the user will not be redirected to `/?pageNum=0`.
+
 ### How to use it
 
 To set the configuration object you can pass it as a third parameter in case of `queryParam` or the second in case of `queryParameters`.
