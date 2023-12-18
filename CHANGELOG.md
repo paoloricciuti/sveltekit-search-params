@@ -1,5 +1,11 @@
 # sveltekit-search-params
 
+## 1.1.1
+
+### Patch Changes
+
+-   fde7148: fix: rework how defaults works
+
 ## 1.1.0
 
 ### Minor Changes
