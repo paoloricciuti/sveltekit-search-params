@@ -84,6 +84,7 @@ test.describe('queryParam', () => {
 		await expect(str).toHaveText('lz');
 		const input = page.getByTestId('lz-input');
 		await input.fill('lz changed');
+		await expect(str).toHaveText('lz changed');
 		const url = new URL(page.url());
 		expect(url.searchParams.get('lz')).toBe('EQGwXgBAxgFghgOwOYFMAmwg');
 		expect(url.searchParams.get('something')).toBe('else');
@@ -134,11 +135,13 @@ test.describe('queryParam', () => {
 	}) => {
 		await page.goto('/');
 		const input = page.getByTestId('str-input');
+		const str = page.getByTestId('str');
 		await input.fill('str');
 		const btn = page.getByTestId('arr-unordered-input');
 		await btn.click();
 		const arr = page.getByTestId('arr-unordered');
 		expect(await arr.count()).toBe(1);
+		await expect(str).toHaveText('str');
 		let url = new URL(page.url());
 		expect(url.searchParams.get('arr-unordered')).toBe('[0]');
 		expect(url.searchParams.get('str')).toBe('str');
@@ -146,6 +149,7 @@ test.describe('queryParam', () => {
 
 		// expect them to be ordered if you access an ordered store
 		await input.fill('string');
+		await expect(str).toHaveText('string');
 		url = new URL(page.url());
 		expect(url.searchParams.get('arr-unordered')).toBe('[0]');
 		expect(url.searchParams.get('str')).toBe('string');
@@ -236,6 +240,7 @@ test.describe('queryParameters', () => {
 		await expect(str).toHaveText('lz');
 		const input = page.getByTestId('lz-input');
 		await input.fill('lz changed');
+		await expect(str).toHaveText('lz changed');
 		const url = new URL(page.url());
 		expect(url.searchParams.get('lz')).toBe('EQGwXgBAxgFghgOwOYFMAmwg');
 		expect(url.searchParams.get('something')).toBe('else');
@@ -286,11 +291,13 @@ test.describe('queryParameters', () => {
 	}) => {
 		await page.goto('/queryparameters');
 		const input = page.getByTestId('str-input');
+		const str = page.getByTestId('str');
 		await input.fill('str');
 		const btn = page.getByTestId('arr-unordered-input');
 		await btn.click();
 		const arr = page.getByTestId('arr-unordered');
 		expect(await arr.count()).toBe(1);
+		await expect(str).toHaveText('str');
 		let url = new URL(page.url());
 		expect(url.searchParams.get('arr-unordered')).toBe('[0]');
 		expect(url.searchParams.get('str')).toBe('str');
@@ -298,6 +305,7 @@ test.describe('queryParameters', () => {
 
 		// expect them to be ordered if you access an ordered store
 		await input.fill('string');
+		await expect(str).toHaveText('string');
 		url = new URL(page.url());
 		expect(url.searchParams.get('arr-unordered')).toBe('[0]');
 		expect(url.searchParams.get('str')).toBe('string');
