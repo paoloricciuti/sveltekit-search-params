@@ -214,22 +214,25 @@ export function queryParameters<T extends object>(
 			clearTimeout(debouncedTimeouts.get('queryParameters'));
 			if (browser) {
 				overrides.set(value);
-				debouncedTimeouts.set(
-					'queryParameters',
-					setTimeout(
-						async () => {
-							if (sort) {
-								query.sort();
-							}
-							await goto(
-								`?${query}${hash}`,
-								pushHistory ? GOTO_OPTIONS_PUSH : GOTO_OPTIONS,
-							);
-							overrides.set({});
-						},
-						changeImmediately ? 0 : debounceHistory,
-					),
-				);
+				// eslint-disable-next-line no-inner-declarations
+				async function navigate() {
+					if (sort) {
+						query.sort();
+					}
+					await goto(
+						`?${query}${hash}`,
+						pushHistory ? GOTO_OPTIONS_PUSH : GOTO_OPTIONS,
+					);
+					overrides.set({});
+				}
+				if (changeImmediately || debounceHistory === 0) {
+					navigate();
+				} else {
+					debouncedTimeouts.set(
+						'queryParameters',
+						setTimeout(navigate, debounceHistory),
+					);
+				}
 			}
 			batchedUpdates.clear();
 		});
@@ -305,22 +308,25 @@ export function queryParam<T = string>(
 			clearTimeout(debouncedTimeouts.get(name));
 			if (browser) {
 				override.set(value);
-				debouncedTimeouts.set(
-					name,
-					setTimeout(
-						async () => {
-							if (sort) {
-								query.sort();
-							}
-							await goto(
-								`?${query}${hash}`,
-								pushHistory ? GOTO_OPTIONS_PUSH : GOTO_OPTIONS,
-							);
-							override.set(null);
-						},
-						changeImmediately ? 0 : debounceHistory,
-					),
-				);
+				// eslint-disable-next-line no-inner-declarations
+				async function navigate() {
+					if (sort) {
+						query.sort();
+					}
+					await goto(
+						`?${query}${hash}`,
+						pushHistory ? GOTO_OPTIONS_PUSH : GOTO_OPTIONS,
+					);
+					override.set(null);
+				}
+				if (changeImmediately || debounceHistory === 0) {
+					navigate();
+				} else {
+					debouncedTimeouts.set(
+						name,
+						setTimeout(navigate, debounceHistory),
+					);
+				}
 			}
 			batchedUpdates.clear();
 		});
