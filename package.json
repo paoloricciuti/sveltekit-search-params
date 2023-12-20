@@ -45,6 +45,7 @@
 		"@sveltejs/adapter-static": "^1.0.0-next.47",
 		"@sveltejs/kit": "^1.29.1",
 		"@sveltejs/package": "^2.0.0",
+		"@svitejs/changesets-changelog-github-compact": "^1.1.0",
 		"@typescript-eslint/eslint-plugin": "^5.27.0",
 		"@typescript-eslint/parser": "^5.27.0",
 		"eslint": "^8.16.0",
