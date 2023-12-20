@@ -1,5 +1,12 @@
 # sveltekit-search-params
 
+## 2.0.0
+
+### Major Changes
+
+-   breaking: remove double navigation, debounce navigate after timeout ([#60](https://github.com/paoloricciuti/sveltekit-search-params/pull/60))
+    feat: add showDefaults option to chose wether to show the defaults or not in the URL
+
 ## 1.1.1
 
 ### Patch Changes
