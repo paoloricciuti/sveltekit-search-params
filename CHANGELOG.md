@@ -1,5 +1,11 @@
 # sveltekit-search-params
 
+## 2.1.0
+
+### Minor Changes
+
+-   feat: add equalityFn option for complex objects and array ([#64](https://github.com/paoloricciuti/sveltekit-search-params/pull/64))
+
 ## 2.0.0
 
 ### Major Changes
