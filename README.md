@@ -8,8 +8,6 @@ The fastest way to read **AND WRITE** from query search params in [sveltekit](ht
 
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/)
 
-![npm bundle size](https://img.shields.io/bundlephobia/minzip/sveltekit-search-params)
-
 ![npm](https://img.shields.io/npm/v/sveltekit-search-params)
 
 ![npm](https://img.shields.io/npm/dt/sveltekit-search-params)
