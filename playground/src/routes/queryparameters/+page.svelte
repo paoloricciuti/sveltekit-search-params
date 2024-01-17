@@ -18,6 +18,13 @@
 			sort: false,
 		},
 	);
+
+	let change_in_store = 0;
+
+	$: {
+		$store;
+		change_in_store++;
+	}
 </script>
 
 <input data-testid="str-input" bind:value={$store.str} />
@@ -83,3 +90,5 @@
 		$store.num = 42;
 	}}>Change two</button
 >
+
+<p data-testid="how-many-store-changes">{change_in_store}</p>

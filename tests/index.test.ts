@@ -51,6 +51,16 @@ test.describe('queryParam', () => {
 		expect(url.searchParams.get('obj')).toBe('{"str":"str"}');
 	});
 
+	test("changing an object doesn't trigger reactivity multiple times", async ({
+		page,
+	}) => {
+		await page.goto('/?obj=%7B%22str%22%3A%22%22%7D');
+		const input = page.getByTestId('obj-input');
+		await input.fill('s');
+		const obj_changes = page.getByTestId('how-many-obj-changes');
+		await expect(obj_changes).toHaveText('2');
+	});
+
 	test('works as expected with array', async ({ page }) => {
 		await page.goto('/');
 		const input = page.getByTestId('arr-input');
@@ -66,6 +76,16 @@ test.describe('queryParam', () => {
 		expect(url.searchParams.get('arr')).toBe('[0,1]');
 	});
 
+	test("changing an array doesn't trigger reactivity multiple times", async ({
+		page,
+	}) => {
+		await page.goto('/');
+		const input = page.getByTestId('arr-input');
+		await input.click();
+		const arr_changes = page.getByTestId('how-many-arr-changes');
+		await expect(arr_changes).toHaveText('2');
+	});
+
 	test('works as expected with lz', async ({ page }) => {
 		await page.goto('/');
 		const input = page.getByTestId('lz-input');
@@ -74,6 +94,16 @@ test.describe('queryParam', () => {
 		await expect(str).toHaveText('lz');
 		const url = new URL(page.url());
 		expect(url.searchParams.get('lz')).toBe('EQGwXsQ');
+	});
+
+	test("changing an lz doesn't trigger reactivity multiple times", async ({
+		page,
+	}) => {
+		await page.goto('/');
+		const input = page.getByTestId('lz-input');
+		await input.fill('l');
+		const lz_changes = page.getByTestId('how-many-lz-changes');
+		await expect(lz_changes).toHaveText('2');
 	});
 
 	test("changing one parameter doesn't interfere with the rest", async ({
@@ -230,6 +260,16 @@ test.describe('queryParameters', () => {
 		await expect(str).toHaveText('lz');
 		const url = new URL(page.url());
 		expect(url.searchParams.get('lz')).toBe('EQGwXsQ');
+	});
+
+	test("changes to the store doesn't trigger reactivity multiple times", async ({
+		page,
+	}) => {
+		await page.goto('/queryparameters?bools=false');
+		const input = page.getByTestId('str-input');
+		await input.fill('s');
+		const store_changes = page.getByTestId('how-many-store-changes');
+		await expect(store_changes).toHaveText('2');
 	});
 
 	test("changing one parameter doesn't interfere with the rest", async ({
@@ -406,5 +446,27 @@ test.describe('default values during ssr', () => {
 		await expect(str).toHaveText('def');
 		await expect(num).toHaveText('42');
 		await expect(str2).toHaveText('str2');
+	});
+});
+
+test.describe('equalityFn to specify when the store is the same as before (not triggering reactivity but still navigating)', () => {
+	test('equalityFn impact the amount of rerenders with queryParam', async ({
+		page,
+	}) => {
+		await page.goto('/equalityFn?obj={"str": ""}&str2=');
+		const str_input = page.getByTestId('str-input');
+		str_input.fill('s');
+		const obj_changes = page.getByTestId('how-many-obj-changes');
+		await expect(obj_changes).toHaveText('4');
+	});
+
+	test('equalityFn impact the amount of rerenders with queryParameters', async ({
+		page,
+	}) => {
+		await page.goto('/equalityFn?obj={"str": ""}&str2=');
+		const str_input = page.getByTestId('str2-input');
+		str_input.fill('s');
+		const obj_changes = page.getByTestId('how-many-store-changes');
+		await expect(obj_changes).toHaveText('4');
 	});
 });

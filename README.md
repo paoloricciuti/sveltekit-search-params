@@ -421,6 +421,28 @@ and you navigate to `/` as soon as the page load it will be redirected to `/?pag
 
 By doing so the store will still have a value of 0 if the search param is not present but the user will not be redirected to `/?pageNum=0`.
 
+### equalityFn
+
+While this is not a problem for primitive values if your store has a complex object or an array (or if you are using `queryParameters`) as a value even if the reference is the same svelte will trigger reactivity for it. To provide you with optimistic updates there's the possibility that the store will change multiple times during a single navigation. To fix this problem by default we check if the value of the store is the same by using `JSON.stringify` so that if the overall shape of your store is the same we avoid triggering the reactivity.
+
+This is fine for most cases and you will likely never touch this option but if you have some use case not covered by `JSON.stringify` you can specify the option `equalityFn`. This option is a function that takes the `current` value and the `next` value as parameters and need to return a `boolean`. You should return `true` from this function when the value of the store is unchanged (according to your own logic). This will not trigger reactivity (note that the navigation will still happen).
+
+For `queryParameters` the equality function applies to the entire store (so make sure to check that every query parameter is exactly the same before returning `true`).
+
+```svelte
+<script lang="ts">
+	import { queryParam, ssp } from 'sveltekit-search-params';
+
+	const pageNum = queryParam('pageNum', ssp.object<{ num: number }>(), {
+		equalityFn(current, next) {
+			return current?.num === next?.num;
+		},
+	});
+</script>
+```
+
+NOTE: the equality function will not be used on primitive values, hence you can't pass the equality function to stores that have a primitive type.
+
 ### How to use it
 
 To set the configuration object you can pass it as a third parameter in case of `queryParam` or the second in case of `queryParameters`.

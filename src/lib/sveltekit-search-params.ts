@@ -33,11 +33,14 @@ export type EncodeAndDecodeOptions<T = any> = {
 	defaultValue?: T;
 };
 
-export type StoreOptions = {
+export type StoreOptions<T> = {
 	debounceHistory?: number;
 	pushHistory?: boolean;
 	sort?: boolean;
 	showDefaults?: boolean;
+	equalityFn?: T extends object
+		? (current: T | null, next: T | null) => boolean
+		: never;
 };
 
 type LooseAutocomplete<T> = {
@@ -100,6 +103,19 @@ function mixSearchAndOptions<T>(
 	];
 }
 
+function isComplexEqual<T>(
+	current: T,
+	next: T,
+	equalityFn: (current: T, next: T) => boolean = (current, next) =>
+		JSON.stringify(current) === JSON.stringify(next),
+) {
+	return (
+		typeof current === 'object' &&
+		typeof next === 'object' &&
+		equalityFn(current, next)
+	);
+}
+
 export const ssp = {
 	object: <T extends object = any>(defaultValue?: T) => ({
 		encode: (value: T) => JSON.stringify(value),
@@ -155,7 +171,7 @@ export const ssp = {
 		},
 		defaultValue,
 	}),
-};
+} satisfies Record<string, () => EncodeAndDecodeOptions<any>>;
 
 type SetTimeout = ReturnType<typeof setTimeout>;
 
@@ -172,9 +188,11 @@ export function queryParameters<T extends object>(
 		pushHistory = true,
 		sort = true,
 		showDefaults = true,
-	}: StoreOptions = {},
+		equalityFn,
+	}: StoreOptions<T> = {},
 ): Writable<LooseAutocomplete<T>> {
 	const overrides = writable<Overrides<T>>({});
+	let currentValue: T;
 	let firstTime = true;
 
 	function _set(value: T, changeImmediately?: boolean) {
@@ -237,17 +255,24 @@ export function queryParameters<T extends object>(
 			batchedUpdates.clear();
 		});
 	}
-	const { subscribe } = derived([page, overrides], ([$page, $overrides]) => {
-		const [valueToSet, anyDefaultedParam] = mixSearchAndOptions(
-			$page?.url?.searchParams,
-			$overrides,
-			options,
-		);
-		if (anyDefaultedParam && showDefaults) {
-			_set(valueToSet, firstTime);
-		}
-		return valueToSet;
-	});
+	const { subscribe } = derived<[typeof page, typeof overrides], T>(
+		[page, overrides],
+		([$page, $overrides], set) => {
+			const [valueToSet, anyDefaultedParam] = mixSearchAndOptions(
+				$page?.url?.searchParams,
+				$overrides,
+				options,
+			);
+			if (anyDefaultedParam && showDefaults) {
+				_set(valueToSet, firstTime);
+			}
+			if (isComplexEqual(currentValue, valueToSet, equalityFn)) {
+				return;
+			}
+			currentValue = structuredClone(valueToSet);
+			return set(valueToSet);
+		},
+	);
 	return {
 		set(newValue) {
 			_set(newValue);
@@ -278,10 +303,12 @@ export function queryParam<T = string>(
 		pushHistory = true,
 		sort = true,
 		showDefaults = true,
-	}: StoreOptions = {},
+		equalityFn,
+	}: StoreOptions<T> = {},
 ): Writable<T | null> {
 	const override = writable<T | null>(null);
 	let firstTime = true;
+	let currentValue: T | null;
 	function _set(value: T | null, changeImmediately?: boolean) {
 		if (!browser) return;
 		firstTime = false;
@@ -332,26 +359,41 @@ export function queryParam<T = string>(
 		});
 	}
 
-	const { subscribe } = derived([page, override], ([$page, $override]) => {
-		if ($override) {
-			return $override;
-		}
-		const actualParam = $page?.url?.searchParams?.get?.(name);
-		if (actualParam == undefined && defaultValue != undefined) {
-			if (showDefaults) {
-				_set(defaultValue, firstTime);
+	const { subscribe } = derived<[typeof page, typeof override], T | null>(
+		[page, override],
+		([$page, $override], set) => {
+			if ($override) {
+				if (isComplexEqual(currentValue, $override, equalityFn)) {
+					return;
+				}
+				currentValue = structuredClone($override);
+				return set($override);
 			}
-			return defaultValue;
-		}
-		return decode(actualParam);
-	});
+			const actualParam = $page?.url?.searchParams?.get?.(name);
+			if (actualParam == undefined && defaultValue != undefined) {
+				if (showDefaults) {
+					_set(defaultValue, firstTime);
+				}
+				if (isComplexEqual(currentValue, defaultValue, equalityFn)) {
+					return;
+				}
+				currentValue = structuredClone(defaultValue);
+				return set(defaultValue);
+			}
+			const retval = decode(actualParam);
+			if (isComplexEqual(currentValue, retval, equalityFn)) {
+				return;
+			}
+			currentValue = structuredClone(retval);
+			return set(retval);
+		},
+	);
 	return {
 		set(newValue) {
 			_set(newValue);
 		},
 		subscribe,
 		update: (updater: Updater<T | null>) => {
-			const currentValue = get({ subscribe });
 			const newValue = updater(currentValue);
 			_set(newValue);
 		},

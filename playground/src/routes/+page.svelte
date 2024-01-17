@@ -10,6 +10,24 @@
 		sort: false,
 	});
 	const lz = queryParam('lz', ssp.lz<string>());
+
+	let obj_changes = 0;
+	let arr_changes = 0;
+	let lz_changes = 0;
+
+	$: {
+		$obj;
+		obj_changes++;
+	}
+
+	$: {
+		$arr;
+		arr_changes++;
+	}
+	$: {
+		$lz;
+		lz_changes++;
+	}
 </script>
 
 <input data-testid="str-input" bind:value={$str} />
@@ -73,3 +91,7 @@
 		$num = 42;
 	}}>Change two</button
 >
+
+<p data-testid="how-many-obj-changes">{obj_changes}</p>
+<p data-testid="how-many-arr-changes">{arr_changes}</p>
+<p data-testid="how-many-lz-changes">{lz_changes}</p>
