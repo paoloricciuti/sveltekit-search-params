@@ -1,5 +1,11 @@
 # sveltekit-search-params
 
+## 2.1.1
+
+### Patch Changes
+
+-   fix: allow building the app in prerendering by faking the page store during building ([#68](https://github.com/paoloricciuti/sveltekit-search-params/pull/68))
+
 ## 2.1.0
 
 ### Minor Changes
