@@ -1,19 +1,36 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { browser } from '$app/environment';
+import { browser, building } from '$app/environment';
 import { goto } from '$app/navigation';
-import { page } from '$app/stores';
+import { page as page_store } from '$app/stores';
+import type { Page } from '@sveltejs/kit';
 import {
 	derived,
 	get,
 	writable,
 	type Updater,
 	type Writable,
+	type Readable,
+	readable,
 } from 'svelte/store';
 import {
 	compressToEncodedURIComponent,
 	decompressFromEncodedURIComponent,
 } from './lz-string/index.js';
+
+// during building we fake the page store with an URL with no search params
+// as it should be during prerendering. This allow the application to still build
+// and the client side behavior is still persisted after the build
+let page: Readable<Pick<Page, 'url'>>;
+if (building) {
+	page = readable({
+		url: new URL(
+			'https://github.com/paoloricciuti/sveltekit-search-params',
+		),
+	});
+} else {
+	page = page_store;
+}
 
 const GOTO_OPTIONS = {
 	keepFocus: true,
