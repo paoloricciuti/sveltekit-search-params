@@ -194,7 +194,7 @@ type SetTimeout = ReturnType<typeof setTimeout>;
 
 const batchedUpdates = new Set<(query: URLSearchParams) => void>();
 
-let batchTimeout: SetTimeout;
+let batchTimeout: number;
 
 const debouncedTimeouts = new Map<string, SetTimeout>();
 
