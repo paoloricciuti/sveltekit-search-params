@@ -379,7 +379,7 @@ export function queryParam<T = string>(
 	const { subscribe } = derived<[typeof page, typeof override], T | null>(
 		[page, override],
 		([$page, $override], set) => {
-			if ($override != null) {
+			if ($override != undefined) {
 				if (isComplexEqual(currentValue, $override, equalityFn)) {
 					return;
 				}
