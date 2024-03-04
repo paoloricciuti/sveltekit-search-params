@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { browser, building } from '$app/environment';
 import { goto } from '$app/navigation';
-import { page as page_store } from '$app/stores';
+import { navigating, page as page_store } from '$app/stores';
 import type { Page } from '@sveltejs/kit';
 import {
 	derived,
@@ -326,8 +326,28 @@ export function queryParam<T = string>(
 	const override = writable<T | null>(null);
 	let firstTime = true;
 	let currentValue: T | null;
+
+	let isNavigating = false;
+	if (browser) {
+		navigating.subscribe((nav) => {
+			isNavigating = nav?.type === 'goto';
+		});
+	}
+
 	function _set(value: T | null, changeImmediately?: boolean) {
 		if (!browser) return;
+
+		// Wait for previous navigation to be finished before updating again
+		if (isNavigating) {
+			const unsubscribe = navigating.subscribe((nav) => {
+				if (nav?.type !== 'goto') {
+					_set(value, changeImmediately);
+					unsubscribe();
+				}
+			});
+			return;
+		}
+
 		firstTime = false;
 		const hash = window.location.hash;
 		const toBatch = (query: URLSearchParams) => {
