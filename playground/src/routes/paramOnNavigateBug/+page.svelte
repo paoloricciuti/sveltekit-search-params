@@ -1,11 +1,16 @@
 <script lang="ts">
+	import { onDestroy } from 'svelte';
 	import { queryParam, ssp } from 'sveltekit-search-params';
 
 	const param1 = queryParam('param1', ssp.string());
 	const param2 = queryParam('param2', ssp.string());
 
-	param1.subscribe(() => {
+	const unsubscribe = param1.subscribe(() => {
 		param2.set('updated param2');
+	});
+
+	onDestroy(() => {
+		unsubscribe();
 	});
 </script>
 
