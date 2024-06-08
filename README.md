@@ -253,7 +253,7 @@ if we add username to the URL like this `/?framework=svelte&isCool=true&username
 
 ### Encoding and Decoding
 
-The parameter passed to `queryParameters` can aslo be used to specify the encoding and decoding just like the `queryParam` method.
+The parameter passed to `queryParameters` can also be used to specify the encoding and decoding just like the `queryParam` method.
 
 ```svelte
 <script lang="ts">
