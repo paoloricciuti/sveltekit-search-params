@@ -89,7 +89,7 @@ Your username is {$username}
 
 ### Encoding and decoding
 
-By default query parameters are strings but more often than not tho we are not working with strings. We are dealing with numbers, boolean, arrays and complex abjects. During the creation of the store you can specify an object containing an encode and a decode property that will be used to transform your data from and to the type you need.
+By default query parameters are strings but more often than not though we are not working with strings. We are dealing with numbers, boolean, arrays and complex objects. During the creation of the store you can specify an object containing an encode and a decode property that will be used to transform your data from and to the type you need.
 
 ```svelte
 <script lang="ts">
