@@ -133,6 +133,26 @@ test.describe('queryParam', () => {
 		expect(url.hash).toBe('#test-hash');
 	});
 
+	test('changing multiple parameters due to subscribe updates params accordingly', async ({
+		page,
+	}) => {
+		await page.goto('/paramOnNavigateBug');
+		const btn = page.getByTestId('update-params');
+		await btn.click();
+
+		// expect(url.searchParams.get('param1')).toBe('');
+
+		await page.waitForURL(
+			(url) => {
+				return (
+					url.searchParams.get('param1') === 'updated param1' &&
+					url.searchParams.get('param2') === 'updated param2'
+				);
+			},
+			{ timeout: 1000 },
+		);
+	});
+
 	test("changing two parameters in the same function doesn't negate", async ({
 		page,
 	}) => {
