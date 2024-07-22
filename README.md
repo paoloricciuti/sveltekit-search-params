@@ -215,7 +215,7 @@ writing in the input will update the state and the URL at the same time.
 
 ### Expecting some parameters
 
-Most of the times if you need to read from query parameters you are expecting some parameters to be present. You can define the parameters you are expecting during the store creating and those will be merged with the actual query parameters despite the fact that they are present or not.
+Most of the times if you need to read from query parameters you are expecting some parameters to be present. You can define the parameters you are expecting during the store creation and those will be merged with the actual query parameters despite the fact that they are present or not.
 
 ```svelte
 <script lang="ts">
