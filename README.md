@@ -18,7 +18,9 @@ The fastest way to read **AND WRITE** from query search params in [sveltekit](ht
 
 Contributions are always welcome!
 
-For the moment there's no code of conduct neither a contributing guideline but if you found a problem or have an idea feel free to [open an issue](https://github.com/paoloricciuti/sveltekit-search-params/issues/new)
+For the moment there's no contributing guidelines but if you found a problem or have an idea feel free to [open an issue](https://github.com/paoloricciuti/sveltekit-search-params/issues/new)
+
+Function changes intended for release should [include a changeset](https://github.com/changesets/changesets/blob/main/docs/adding-a-changeset.md)
 
 If you want the fastest way to open a PR try out Codeflow
 
