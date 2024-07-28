@@ -390,6 +390,9 @@ test.describe('default values', () => {
 		input.fill('test');
 		const link = page.locator('a');
 		await link.click();
+		await page.waitForURL(
+			(url) => url.searchParams.get('obj') === '{"test":""}',
+		);
 		const url = new URL(page.url());
 		expect(url.searchParams.get('obj')).toBe('{"test":""}');
 	});
@@ -402,6 +405,9 @@ test.describe('default values', () => {
 		input.fill('test');
 		const link = page.locator('a');
 		await link.click();
+		await page.waitForURL(
+			(url) => url.searchParams.get('obj') === '{"test":""}',
+		);
 		const url = new URL(page.url());
 		expect(url.searchParams.get('obj')).toBe('{"test":""}');
 	});
