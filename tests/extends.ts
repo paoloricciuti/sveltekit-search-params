@@ -1,7 +1,7 @@
 import { test as base } from '@playwright/test';
 
 export const test = base.extend({
-	page: async ({ page, javaScriptEnabled, context }, use, testInfo) => {
+	page: async ({ page, javaScriptEnabled }, use) => {
 		// automatically wait for kit started event after navigation functions if js is enabled
 		const page_navigation_functions = ['goto', 'goBack', 'reload'] as const;
 		page_navigation_functions.forEach((fn) => {

@@ -8,6 +8,7 @@
 
 	let obj_changes = 0;
 	$: {
+		// eslint-disable-next-line @typescript-eslint/no-unused-expressions
 		$obj;
 		obj_changes++;
 	}
@@ -25,6 +26,7 @@
 
 	let store_changes = 0;
 	$: {
+		// eslint-disable-next-line @typescript-eslint/no-unused-expressions
 		$params;
 		store_changes++;
 	}

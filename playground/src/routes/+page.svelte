@@ -16,15 +16,18 @@
 	let lz_changes = 0;
 
 	$: {
+		// eslint-disable-next-line @typescript-eslint/no-unused-expressions
 		$obj;
 		obj_changes++;
 	}
 
 	$: {
+		// eslint-disable-next-line @typescript-eslint/no-unused-expressions
 		$arr;
 		arr_changes++;
 	}
 	$: {
+		// eslint-disable-next-line @typescript-eslint/no-unused-expressions
 		$lz;
 		lz_changes++;
 	}

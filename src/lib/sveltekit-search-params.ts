@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-empty-function */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { browser, building } from '$app/environment';
 import { goto } from '$app/navigation';
@@ -175,7 +174,7 @@ function objectEncodeAndDecodeOptions<T extends object = any>(
 			if (value === null) return null;
 			try {
 				return JSON.parse(value);
-			} catch (e) {
+			} catch {
 				return null;
 			}
 		},
@@ -198,7 +197,7 @@ function arrayEncodeAndDecodeOptions<T = any>(
 			if (value === null) return null;
 			try {
 				return JSON.parse(value);
-			} catch (e) {
+			} catch {
 				return null;
 			}
 		},
@@ -224,7 +223,7 @@ function lzEncodeAndDecodeOptions<T = any>(
 				return JSON.parse(
 					decompressFromEncodedURIComponent(value) ?? '',
 				);
-			} catch (e) {
+			} catch {
 				return null;
 			}
 		},
@@ -314,7 +313,7 @@ export function queryParameters<
 			clearTimeout(debouncedTimeouts.get('queryParameters'));
 			if (browser) {
 				overrides.set(value);
-				// eslint-disable-next-line no-inner-declarations
+
 				async function navigate() {
 					if (sort) {
 						query.sort();
@@ -427,7 +426,7 @@ export function queryParam<T = string>(
 			clearTimeout(debouncedTimeouts.get(name));
 			if (browser) {
 				override.set(value);
-				// eslint-disable-next-line no-inner-declarations
+
 				async function navigate() {
 					if (sort) {
 						query.sort();

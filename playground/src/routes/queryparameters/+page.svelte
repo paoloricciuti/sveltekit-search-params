@@ -22,6 +22,7 @@
 	let change_in_store = 0;
 
 	$: {
+		// eslint-disable-next-line @typescript-eslint/no-unused-expressions
 		$store;
 		change_in_store++;
 	}
