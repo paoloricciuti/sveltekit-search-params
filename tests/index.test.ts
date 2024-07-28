@@ -381,6 +381,30 @@ test.describe('default values', () => {
 		expect(url.searchParams.get('str-no-show')).toBeNull();
 		expect(url.searchParams.get('str2-no-show')).toBeNull();
 	});
+
+	test("default values for complex values doesn't get override on writes", async ({
+		page,
+	}) => {
+		await page.goto('/default/obj');
+		const input = page.locator('input');
+		input.fill('test');
+		const link = page.locator('a');
+		await link.click();
+		const url = new URL(page.url());
+		expect(url.searchParams.get('obj')).toBe('{"test":""}');
+	});
+
+	test("default values for complex values doesn't get override on writes (queryParameters)", async ({
+		page,
+	}) => {
+		await page.goto('/default/parameters-obj');
+		const input = page.locator('input');
+		input.fill('test');
+		const link = page.locator('a');
+		await link.click();
+		const url = new URL(page.url());
+		expect(url.searchParams.get('obj')).toBe('{"test":""}');
+	});
 });
 
 test.describe('debounce history entry', () => {

@@ -281,13 +281,13 @@ export function queryParameters<T extends object>(
 				options,
 			);
 			if (anyDefaultedParam && showDefaults) {
-				_set(valueToSet, firstTime);
+				_set(structuredClone(valueToSet), firstTime);
 			}
 			if (isComplexEqual(currentValue, valueToSet, equalityFn)) {
 				return;
 			}
 			currentValue = structuredClone(valueToSet);
-			return set(valueToSet);
+			return set(structuredClone(valueToSet));
 		},
 	);
 	return {
@@ -389,13 +389,13 @@ export function queryParam<T = string>(
 			const actualParam = $page?.url?.searchParams?.get?.(name);
 			if (actualParam == undefined && defaultValue != undefined) {
 				if (showDefaults) {
-					_set(defaultValue, firstTime);
+					_set(structuredClone(defaultValue), firstTime);
 				}
 				if (isComplexEqual(currentValue, defaultValue, equalityFn)) {
 					return;
 				}
 				currentValue = structuredClone(defaultValue);
-				return set(defaultValue);
+				return set(structuredClone(defaultValue));
 			}
 			const retval = decode(actualParam);
 			if (isComplexEqual(currentValue, retval, equalityFn)) {
