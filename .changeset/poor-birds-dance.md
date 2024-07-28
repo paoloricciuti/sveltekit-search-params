@@ -1,5 +1,5 @@
 ---
-'sveltekit-search-params': patch
+'sveltekit-search-params': breaking
 ---
 
-Return non-null writable for defined defaultValue
+Return non-null writable for defined defaultValue and fix types for `queryParameters`
