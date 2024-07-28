@@ -1,5 +1,15 @@
 # sveltekit-search-params
 
+## 3.0.0
+
+### Major Changes
+
+- Return non-null writable for defined defaultValue and fix types for `queryParameters` ([#87](https://github.com/paoloricciuti/sveltekit-search-params/pull/87))
+
+### Patch Changes
+
+- fix: avoid complex values default being overriden on write ([#89](https://github.com/paoloricciuti/sveltekit-search-params/pull/89))
+
 ## 2.1.2
 
 ### Patch Changes
