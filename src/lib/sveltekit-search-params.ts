@@ -133,18 +133,32 @@ function isComplexEqual<T>(
 	);
 }
 
-function primitiveEncodeAndDecodeOptions<T>({encode, decode}: {encode: (value: T) => string | undefined; decode: (value: string | null) => T | null}) {
-	function ssp(defaultValue: T): EncodeAndDecodeOptions<T> & { defaultValue: T };
+function primitiveEncodeAndDecodeOptions<T>({
+	encode,
+	decode,
+}: {
+	encode: (value: T) => string | undefined;
+	decode: (value: string | null) => T | null;
+}) {
+	function ssp(
+		defaultValue: T,
+	): EncodeAndDecodeOptions<T> & { defaultValue: T };
 	function ssp(): EncodeAndDecodeOptions<T> & { defaultValue: undefined };
 	function ssp(defaultValue?: T): EncodeAndDecodeOptions<T> {
-		return { encode, decode, defaultValue, };
+		return { encode, decode, defaultValue };
 	}
 	return ssp;
 }
 
-function objectEncodeAndDecodeOptions<T extends object = any>(defaultValue: T): EncodeAndDecodeOptions<T> & { defaultValue: T };
-function objectEncodeAndDecodeOptions<T extends object = any>(): EncodeAndDecodeOptions<T> & { defaultValue: undefined };
-function objectEncodeAndDecodeOptions<T extends object = any>(defaultValue?: T): EncodeAndDecodeOptions<T> {
+function objectEncodeAndDecodeOptions<T extends object = any>(
+	defaultValue: T,
+): EncodeAndDecodeOptions<T> & { defaultValue: T };
+function objectEncodeAndDecodeOptions<
+	T extends object = any,
+>(): EncodeAndDecodeOptions<T> & { defaultValue: undefined };
+function objectEncodeAndDecodeOptions<T extends object = any>(
+	defaultValue?: T,
+): EncodeAndDecodeOptions<T> {
 	return {
 		encode: (value: T) => JSON.stringify(value),
 		decode: (value: string | null): T | null => {
@@ -159,9 +173,15 @@ function objectEncodeAndDecodeOptions<T extends object = any>(defaultValue?: T):
 	};
 }
 
-function arrayEncodeAndDecodeOptions<T = any>(defaultValue: T[]): EncodeAndDecodeOptions<T[]> & { defaultValue: T[] };
-function arrayEncodeAndDecodeOptions<T = any>(): EncodeAndDecodeOptions<T[]> & { defaultValue: undefined };
-function arrayEncodeAndDecodeOptions<T = any>(defaultValue?: T[]): EncodeAndDecodeOptions<T[]> {
+function arrayEncodeAndDecodeOptions<T = any>(
+	defaultValue: T[],
+): EncodeAndDecodeOptions<T[]> & { defaultValue: T[] };
+function arrayEncodeAndDecodeOptions<T = any>(): EncodeAndDecodeOptions<T[]> & {
+	defaultValue: undefined;
+};
+function arrayEncodeAndDecodeOptions<T = any>(
+	defaultValue?: T[],
+): EncodeAndDecodeOptions<T[]> {
 	return {
 		encode: (value: T[]) => JSON.stringify(value),
 		decode: (value: string | null): T[] | null => {
@@ -176,15 +196,24 @@ function arrayEncodeAndDecodeOptions<T = any>(defaultValue?: T[]): EncodeAndDeco
 	};
 }
 
-function lzEncodeAndDecodeOptions<T = any>(defaultValue: T): EncodeAndDecodeOptions<T> & { defaultValue: T };
-function lzEncodeAndDecodeOptions<T = any>(): EncodeAndDecodeOptions<T> & { defaultValue: undefined };
-function lzEncodeAndDecodeOptions<T = any>(defaultValue?: T): EncodeAndDecodeOptions<T> {
+function lzEncodeAndDecodeOptions<T = any>(
+	defaultValue: T,
+): EncodeAndDecodeOptions<T> & { defaultValue: T };
+function lzEncodeAndDecodeOptions<T = any>(): EncodeAndDecodeOptions<T> & {
+	defaultValue: undefined;
+};
+function lzEncodeAndDecodeOptions<T = any>(
+	defaultValue?: T,
+): EncodeAndDecodeOptions<T> {
 	return {
-		encode: (value: T) => compressToEncodedURIComponent(JSON.stringify(value)),
+		encode: (value: T) =>
+			compressToEncodedURIComponent(JSON.stringify(value)),
 		decode: (value: string | null): T | null => {
 			if (!value) return null;
 			try {
-				return JSON.parse(decompressFromEncodedURIComponent(value) ?? '');
+				return JSON.parse(
+					decompressFromEncodedURIComponent(value) ?? '',
+				);
 			} catch (e) {
 				return null;
 			}
@@ -209,14 +238,16 @@ export const ssp = {
 	object: objectEncodeAndDecodeOptions,
 	array: arrayEncodeAndDecodeOptions,
 	lz: lzEncodeAndDecodeOptions,
-} satisfies Record<string, <T = any>(defaultValue?: T) => EncodeAndDecodeOptions<T>>;
-
+} satisfies Record<
+	string,
+	<T = any>(defaultValue?: T) => EncodeAndDecodeOptions<T>
+>;
 
 type SetTimeout = ReturnType<typeof setTimeout>;
 
 const batchedUpdates = new Set<(query: URLSearchParams) => void>();
 
-let batchTimeout: SetTimeout;
+let batchTimeout: number;
 
 const debouncedTimeouts = new Map<string, SetTimeout>();
 
@@ -330,8 +361,16 @@ const DEFAULT_ENCODER_DECODER: EncodeAndDecodeOptions = {
 	decode: (value: string | null) => (value ? value.toString() : null),
 };
 
-export function queryParam<T>(name: string, options: EncodeAndDecodeOptions<T> & { defaultValue: T }, storeOptions?: StoreOptions<T>): Writable<T>;
-export function queryParam<T>(name: string, options?: EncodeAndDecodeOptions<T>, storeOptions?: StoreOptions<T>): Writable<T | null>;
+export function queryParam<T>(
+	name: string,
+	options: EncodeAndDecodeOptions<T> & { defaultValue: T },
+	storeOptions?: StoreOptions<T>,
+): Writable<T>;
+export function queryParam<T = string>(
+	name: string,
+	options?: EncodeAndDecodeOptions<T>,
+	storeOptions?: StoreOptions<T>,
+): Writable<T | null>;
 export function queryParam<T = string>(
 	name: string,
 	{
