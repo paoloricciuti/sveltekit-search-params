@@ -67,7 +67,17 @@ type LooseAutocomplete<T> = {
 };
 
 type Options<T> = {
-	[Key in keyof T]: EncodeAndDecodeOptions<T[Key]> | boolean;
+	[Key in keyof T]:
+		| (T[Key] extends boolean
+				? string
+				: T[Key] extends EncodeAndDecodeOptions<infer TReturn>
+					? TReturn
+					: string)
+		| (T[Key] extends EncodeAndDecodeOptions<any>
+				? undefined extends T[Key]['defaultValue']
+					? null
+					: never
+				: null);
 };
 
 type Overrides<T> = {
@@ -76,8 +86,8 @@ type Overrides<T> = {
 
 function mixSearchAndOptions<T>(
 	searchParams: URLSearchParams,
-	overrides: Overrides<T>,
-	options?: Options<T>,
+	overrides: NoInfer<Overrides<Options<T>>>,
+	options?: T,
 ): [LooseAutocomplete<T>, boolean] {
 	const uniqueKeys = Array.from(
 		new Set(
@@ -251,21 +261,23 @@ let batchTimeout: number;
 
 const debouncedTimeouts = new Map<string, SetTimeout>();
 
-export function queryParameters<T extends object>(
-	options?: Options<T>,
+export function queryParameters<
+	T extends Record<string, EncodeAndDecodeOptions | boolean>,
+>(
+	options?: T,
 	{
 		debounceHistory = 0,
 		pushHistory = true,
 		sort = true,
 		showDefaults = true,
 		equalityFn,
-	}: StoreOptions<T> = {},
-): Writable<LooseAutocomplete<T>> {
-	const overrides = writable<Overrides<T>>({});
-	let currentValue: T;
+	}: StoreOptions<Options<T>> = {},
+): Writable<LooseAutocomplete<Options<T>>> {
+	const overrides = writable<Overrides<Options<T>>>({});
+	let currentValue: Options<T>;
 	let firstTime = true;
 
-	function _set(value: T, changeImmediately?: boolean) {
+	function _set(value: Options<T>, changeImmediately?: boolean) {
 		if (!browser) return;
 		firstTime = false;
 		const hash = window.location.hash;
@@ -325,7 +337,7 @@ export function queryParameters<T extends object>(
 			batchedUpdates.clear();
 		});
 	}
-	const { subscribe } = derived<[typeof page, typeof overrides], T>(
+	const { subscribe } = derived<[typeof page, typeof overrides], Options<T>>(
 		[page, overrides],
 		([$page, $overrides], set) => {
 			const [valueToSet, anyDefaultedParam] = mixSearchAndOptions(
@@ -348,7 +360,7 @@ export function queryParameters<T extends object>(
 			_set(newValue);
 		},
 		subscribe,
-		update: (updater: Updater<LooseAutocomplete<T>>) => {
+		update: (updater: Updater<LooseAutocomplete<Options<T>>>) => {
 			const currentValue = get({ subscribe });
 			const newValue = updater(currentValue);
 			_set(newValue);
