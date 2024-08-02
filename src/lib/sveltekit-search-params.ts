@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { browser, building } from '$app/environment';
 import { goto } from '$app/navigation';
-import { page as page_store } from '$app/stores';
+import { navigating, page as page_store } from '$app/stores';
 import type { Page } from '@sveltejs/kit';
 import {
 	derived,
@@ -10,6 +10,8 @@ import {
 	type Updater,
 	type Writable,
 	type Readable,
+	type Subscriber,
+	type Unsubscriber,
 	readable,
 } from 'svelte/store';
 import {
@@ -400,8 +402,23 @@ export function queryParam<T = string>(
 	const override = writable<T | null>(null);
 	let firstTime = true;
 	let currentValue: T | null;
+
+	let isNavigating = false;
+
 	function _set(value: T | null, changeImmediately?: boolean) {
 		if (!browser) return;
+
+		// Wait for previous navigation to be finished before updating again
+		if (isNavigating) {
+			const unsubscribe = navigating.subscribe((nav) => {
+				if (nav?.type !== 'goto') {
+					_set(value, changeImmediately);
+					unsubscribe();
+				}
+			});
+			return;
+		}
+
 		firstTime = false;
 		const hash = window.location.hash;
 		const toBatch = (query: URLSearchParams) => {
@@ -450,7 +467,7 @@ export function queryParam<T = string>(
 		});
 	}
 
-	const { subscribe } = derived<[typeof page, typeof override], T | null>(
+	const store = derived<[typeof page, typeof override], T | null>(
 		[page, override],
 		([$page, $override], set) => {
 			if ($override != undefined) {
@@ -483,10 +500,29 @@ export function queryParam<T = string>(
 		set(newValue) {
 			_set(newValue);
 		},
-		subscribe,
 		update: (updater: Updater<T | null>) => {
 			const newValue = updater(currentValue);
 			_set(newValue);
+		},
+		subscribe(
+			run: Subscriber<T | null>,
+			invalidate?: (value?: T | null) => void,
+		): Unsubscriber {
+			// Subscribe to the derived store
+			const storeUnsubscribe = store.subscribe(run, invalidate);
+			// Subscribe to isNavigating
+			let unsubscribeNavigating: () => void;
+			if (browser) {
+				unsubscribeNavigating = navigating.subscribe((nav) => {
+					isNavigating = nav?.type === 'goto';
+				});
+			}
+			return () => {
+				storeUnsubscribe();
+				if (unsubscribeNavigating) {
+					unsubscribeNavigating();
+				}
+			};
 		},
 	};
 }
