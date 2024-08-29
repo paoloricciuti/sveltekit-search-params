@@ -132,7 +132,7 @@ this will make the query parameter change as soon as the page is rendered on the
 
 > **Warning**
 >
-> You can't run `goto` on the server so if the page is server side rendered it will still have the null value (this is to say don't relay on the assumption that the store will always be not null).
+> You can't run `goto` on the server so if the page is server side rendered it will still have the null value (this is to say don't rely on the assumption that the store will always be not null).
 
 ### Helpers encodings and decodings
 
@@ -214,6 +214,35 @@ Just like with the single parameter case you can just update the store and the U
 ```
 
 writing in the input will update the state and the URL at the same time.
+
+### Updating multiple parameters at once
+
+When you need to update multiple different parameters at once you will want to use the `update()` method to update the store to prevent multiple calls of `goto()`.
+
+```svelte
+<script lang="ts">
+	import { queryParameters } from 'sveltekit-search-params';
+
+	const store = queryParameters();
+
+	const update = (value) => {
+		store.update((v) => {
+			return {
+				...v,
+				from: value.from,
+				to: value.to,
+				period: value.period,
+			};
+		});
+	};
+</script>
+
+<SomeComponent onUpdate={update} />
+```
+
+> **Warning**
+>
+> If you don't use the update and instead individually assign each property on the store you may get `sveltekit 'client.js Uncaught (in promise) Error: navigation aborted'` errors.
 
 ### Expecting some parameters
 
