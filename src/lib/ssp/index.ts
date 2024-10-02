@@ -1,3 +1,4 @@
+import { sspBase64 } from './base64';
 import {
 	arrayEncodeAndDecodeOptions,
 	objectEncodeAndDecodeOptions,
@@ -21,4 +22,5 @@ export default {
 	object: objectEncodeAndDecodeOptions,
 	array: arrayEncodeAndDecodeOptions,
 	lz: lzEncodeAndDecodeOptions,
+	base64: sspBase64,
 } as const;

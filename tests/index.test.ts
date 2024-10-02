@@ -106,6 +106,26 @@ test.describe('queryParam', () => {
 		await expect(lz_changes).toHaveText('2');
 	});
 
+	test('works as expected with base64', async ({ page }) => {
+		await page.goto('/');
+		const input = page.getByTestId('base64-input');
+		await input.fill('a Ā 𐀀 文 🦄');
+		const str = page.getByTestId('base64');
+		await expect(str).toHaveText('a Ā 𐀀 文 🦄');
+		const url = new URL(page.url());
+		expect(url.searchParams.get('base64')).toBe('YSDEgCDwkICAIOaWhyDwn6aE');
+	});
+
+	test("changing a base64 doesn't trigger reactivity multiple times", async ({
+		page,
+	}) => {
+		await page.goto('/');
+		const input = page.getByTestId('base64-input');
+		await input.fill('a');
+		const base64_changes = page.getByTestId('how-many-base64-changes');
+		await expect(base64_changes).toHaveText('2');
+	});
+
 	test("changing one parameter doesn't interfere with the rest", async ({
 		page,
 	}) => {
@@ -260,6 +280,16 @@ test.describe('queryParameters', () => {
 		await expect(str).toHaveText('lz');
 		const url = new URL(page.url());
 		expect(url.searchParams.get('lz')).toBe('EQGwXsQ');
+	});
+
+	test('works as expected with base64', async ({ page }) => {
+		await page.goto('/queryparameters');
+		const input = page.getByTestId('base64-input');
+		await input.fill('a Ā 𐀀 文 🦄');
+		const str = page.getByTestId('base64');
+		await expect(str).toHaveText('a Ā 𐀀 文 🦄');
+		const url = new URL(page.url());
+		expect(url.searchParams.get('base64')).toBe('YSDEgCDwkICAIOaWhyDwn6aE');
 	});
 
 	test("changes to the store doesn't trigger reactivity multiple times", async ({
