@@ -49,6 +49,7 @@ export default [
 					caughtErrorsIgnorePattern: '^(_|\\$\\$)',
 				},
 			],
+			'@typescript-eslint/no-explicit-any': 'off',
 		},
 	},
 ];
