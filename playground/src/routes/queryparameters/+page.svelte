@@ -8,6 +8,7 @@
 		obj: ssp.object<{ str: string }>(),
 		arr: ssp.array<number>(),
 		lz: ssp.lz<string>(),
+		base64: ssp.base64(),
 	});
 
 	const unordered_store = queryParameters(
@@ -83,6 +84,9 @@
 
 <input data-testid="lz-input" bind:value={$store.lz} />
 <div data-testid="lz">{$store.lz}</div>
+
+<input data-testid="base64-input" bind:value={$store.base64} />
+<div data-testid="base64">{$store.base64}</div>
 
 <button
 	data-testid="change-two"

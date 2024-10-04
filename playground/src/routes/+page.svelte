@@ -10,10 +10,12 @@
 		sort: false,
 	});
 	const lz = queryParam('lz', ssp.lz<string>());
+	const base64 = queryParam('base64', ssp.base64());
 
 	let obj_changes = 0;
 	let arr_changes = 0;
 	let lz_changes = 0;
+	let base64_changes = 0;
 
 	$: {
 		// eslint-disable-next-line @typescript-eslint/no-unused-expressions
@@ -30,6 +32,11 @@
 		// eslint-disable-next-line @typescript-eslint/no-unused-expressions
 		$lz;
 		lz_changes++;
+	}
+	$: {
+		// eslint-disable-next-line @typescript-eslint/no-unused-expressions
+		$base64;
+		base64_changes++;
 	}
 </script>
 
@@ -87,6 +94,9 @@
 <input data-testid="lz-input" bind:value={$lz} />
 <div data-testid="lz">{$lz}</div>
 
+<input data-testid="base64-input" bind:value={$base64} />
+<div data-testid="base64">{$base64}</div>
+
 <button
 	data-testid="change-two"
 	on:click={() => {
@@ -98,3 +108,4 @@
 <p data-testid="how-many-obj-changes">{obj_changes}</p>
 <p data-testid="how-many-arr-changes">{arr_changes}</p>
 <p data-testid="how-many-lz-changes">{lz_changes}</p>
+<p data-testid="how-many-base64-changes">{base64_changes}</p>

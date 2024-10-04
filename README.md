@@ -54,11 +54,11 @@ The simplest and most effective way to use this library is by importing the meth
 Your username is {$username}
 ```
 
-the function returns a store so make sure to use it with the `$` prepended to handle auto-subscriprion. In case there's not a query parameter with the chosen name it will simply be null.
+the function returns a store so make sure to use it with the `$` prepended to handle auto-subscription. In case there's not a query parameter with the chosen name it will simply be null.
 
 ### Writing to the store (single parameter)
 
-Reading query parameters is cool but you know what is even cooler? Writing query parameters! With this library you can treat your store just like normal state in svelte. To update the state and conseguentely the url you can just do this
+Reading query parameters is cool but you know what is even cooler? Writing query parameters! With this library you can treat your store just like normal state in svelte. To update the state and consequently the url you can just do this
 
 ```svelte
 <script lang="ts">
@@ -107,7 +107,7 @@ The count is {$count}
 <input bind:value={$count} type="number" />
 ```
 
-this time $count would be of type number and the deconding function it's what's used to update the url when you write to the store.
+this time $count would be of type number and the decoding function it's what's used to update the url when you write to the store.
 
 ### Default values
 
@@ -322,7 +322,7 @@ There are six helpers all exported as functions on the object ssp. To each one o
 
 #### object
 
-To map from a query parameter to an object. An url like this `/?obj={"isComplex":%20true,%20"nested":%20{"field":%20"value"}}` will be mapped to
+To map from a query parameter to an object. A url like this `/?obj={"isComplex":%20true,%20"nested":%20{"field":%20"value"}}` will be mapped to
 
 ```typescript
 $store.obj.isComplex; //true
@@ -332,7 +332,7 @@ $store.obj.nested.value; // "value"
 
 #### array
 
-To map from a query parameter to an array. An url like this `/?arr=[1,2,3,4]` will be mapped to
+To map from a query parameter to an array. A url like this `/?arr=[1,2,3,4]` will be mapped to
 
 ```typescript
 $store.arr[0]; //1
@@ -343,7 +343,7 @@ $store.arr[3]; //4
 
 #### number
 
-To map from a query parameter to a number. An url like this `/?num=1` will be mapped to
+To map from a query parameter to a number. A url like this `/?num=1` will be mapped to
 
 ```typescript
 $store.num; //1
@@ -351,19 +351,19 @@ $store.num; //1
 
 #### boolean
 
-To map from a query parameter to a boolean. An url like this `/?bool=true` will be mapped to
+To map from a query parameter to a boolean. A url like this `/?bool=true` will be mapped to
 
 ```typescript
 $store.bool; //true
 ```
 
-as we've seen an url like this `/?bool=false` will be mapped to
+as we've seen a url like this `/?bool=false` will be mapped to
 
 ```typescript
 $store.bool; //false
 ```
 
-just like an url like this `/`
+just like a url like this `/`
 
 #### string
 
@@ -373,10 +373,20 @@ This is exported mainly for readability since all query parameters are already s
 
 To map any JSON serializable state to his lz-string representation. This is a common way to store state in query parameters that will prevent the link to directly show the state.
 
-An url like this `/?state=N4IgbghgNgrgpiAXCAsgTwAQGMD2OoYCO8ATpgA4QkQC2cALnCSAL5A` will map to
+A url like this `/?state=N4IgbghgNgrgpiAXCAsgTwAQGMD2OoYCO8ATpgA4QkQC2cALnCSAL5A` will map to
 
 ```typescript
 $store.state.value; //My cool query parameter
+```
+
+#### base64
+
+To store more complicated strings, such as those containing unicode characters, newlines, or other special characters, you can use the base64 helper. The helper follows the "Base64 URL safe" pattern described in the [MDN Web Docs](https://developer.mozilla.org/en-US/docs/Glossary/Base64).
+
+A url like this `/?state=YSDEgCDwkICAIOaWhyDwn6aE` will map to
+
+```typescript
+$store.state.value; //a Ā 𐀀 文 🦄
 ```
 
 ## Store options
@@ -468,7 +478,7 @@ To set the configuration object you can pass it as a third parameter in case of 
 </script>
 ```
 
-## Vite dependecies error
+## Vite dependencies error
 
 If you ran into issues with vite you need to update your `vite.config.ts` or `vite.config.js` file to include the plugin exported from `sveltekit-search-params/plugin`. It's as simple as
 
