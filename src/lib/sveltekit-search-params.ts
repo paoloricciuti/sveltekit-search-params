@@ -299,6 +299,15 @@ export function queryParameters<
 				const newValue = fnToCall((value as any)[field]);
 				if (newValue == undefined) {
 					query.delete(field as string);
+				} else if (
+					!showDefaults &&
+					newValue ===
+						fnToCall(
+							(optionsKey as EncodeAndDecodeOptions)
+								?.defaultValue,
+						)
+				) {
+					query.delete(field as string);
 				} else {
 					query.set(field as string, newValue);
 				}
@@ -410,6 +419,8 @@ export function queryParam<T = string>(
 			} else {
 				const newValue = encode(value);
 				if (newValue == undefined) {
+					query.delete(name);
+				} else if (!showDefaults && newValue === encode(defaultValue)) {
 					query.delete(name);
 				} else {
 					query.set(name, newValue);
