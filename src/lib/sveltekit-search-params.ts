@@ -12,6 +12,7 @@ import {
 	readable,
 } from 'svelte/store';
 import type { EncodeAndDecodeOptions, StoreOptions } from './types';
+export type { EncodeAndDecodeOptions, StoreOptions };
 
 // during building we fake the page store with an URL with no search params
 // as it should be during prerendering. This allow the application to still build
