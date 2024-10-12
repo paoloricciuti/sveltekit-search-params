@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { browser, building } from '$app/environment';
 import { goto } from '$app/navigation';
 import { page as page_store } from '$app/stores';
@@ -12,10 +11,8 @@ import {
 	type Readable,
 	readable,
 } from 'svelte/store';
-import {
-	compressToEncodedURIComponent,
-	decompressFromEncodedURIComponent,
-} from './lz-string/index.js';
+import type { EncodeAndDecodeOptions, StoreOptions } from './types';
+export type { EncodeAndDecodeOptions, StoreOptions };
 
 // during building we fake the page store with an URL with no search params
 // as it should be during prerendering. This allow the application to still build
@@ -41,22 +38,6 @@ const GOTO_OPTIONS_PUSH = {
 	keepFocus: true,
 	noScroll: true,
 	replaceState: false,
-};
-
-export type EncodeAndDecodeOptions<T = any> = {
-	encode: (value: T) => string | undefined;
-	decode: (value: string | null) => T | null;
-	defaultValue?: T;
-};
-
-export type StoreOptions<T> = {
-	debounceHistory?: number;
-	pushHistory?: boolean;
-	sort?: boolean;
-	showDefaults?: boolean;
-	equalityFn?: T extends object
-		? (current: T | null, next: T | null) => boolean
-		: never;
 };
 
 type LooseAutocomplete<T> = {
@@ -142,121 +123,11 @@ function isComplexEqual<T>(
 	);
 }
 
-function primitiveEncodeAndDecodeOptions<T>({
-	encode,
-	decode,
-}: {
-	encode: (value: T) => string | undefined;
-	decode: (value: string | null) => T | null;
-}) {
-	function ssp(
-		defaultValue: T,
-	): EncodeAndDecodeOptions<T> & { defaultValue: T };
-	function ssp(): EncodeAndDecodeOptions<T> & { defaultValue: undefined };
-	function ssp(defaultValue?: T): EncodeAndDecodeOptions<T> {
-		return { encode, decode, defaultValue };
-	}
-	return ssp;
-}
-
-function objectEncodeAndDecodeOptions<T extends object = any>(
-	defaultValue: T,
-): EncodeAndDecodeOptions<T> & { defaultValue: T };
-function objectEncodeAndDecodeOptions<
-	T extends object = any,
->(): EncodeAndDecodeOptions<T> & { defaultValue: undefined };
-function objectEncodeAndDecodeOptions<T extends object = any>(
-	defaultValue?: T,
-): EncodeAndDecodeOptions<T> {
-	return {
-		encode: (value: T) => JSON.stringify(value),
-		decode: (value: string | null): T | null => {
-			if (value === null) return null;
-			try {
-				return JSON.parse(value);
-			} catch {
-				return null;
-			}
-		},
-		defaultValue,
-	};
-}
-
-function arrayEncodeAndDecodeOptions<T = any>(
-	defaultValue: T[],
-): EncodeAndDecodeOptions<T[]> & { defaultValue: T[] };
-function arrayEncodeAndDecodeOptions<T = any>(): EncodeAndDecodeOptions<T[]> & {
-	defaultValue: undefined;
-};
-function arrayEncodeAndDecodeOptions<T = any>(
-	defaultValue?: T[],
-): EncodeAndDecodeOptions<T[]> {
-	return {
-		encode: (value: T[]) => JSON.stringify(value),
-		decode: (value: string | null): T[] | null => {
-			if (value === null) return null;
-			try {
-				return JSON.parse(value);
-			} catch {
-				return null;
-			}
-		},
-		defaultValue,
-	};
-}
-
-function lzEncodeAndDecodeOptions<T = any>(
-	defaultValue: T,
-): EncodeAndDecodeOptions<T> & { defaultValue: T };
-function lzEncodeAndDecodeOptions<T = any>(): EncodeAndDecodeOptions<T> & {
-	defaultValue: undefined;
-};
-function lzEncodeAndDecodeOptions<T = any>(
-	defaultValue?: T,
-): EncodeAndDecodeOptions<T> {
-	return {
-		encode: (value: T) =>
-			compressToEncodedURIComponent(JSON.stringify(value)),
-		decode: (value: string | null): T | null => {
-			if (!value) return null;
-			try {
-				return JSON.parse(
-					decompressFromEncodedURIComponent(value) ?? '',
-				);
-			} catch {
-				return null;
-			}
-		},
-		defaultValue,
-	};
-}
-
-export const ssp = {
-	number: primitiveEncodeAndDecodeOptions({
-		encode: (value: number) => value.toString(),
-		decode: (value: string | null) => (value ? parseFloat(value) : null),
-	}),
-	boolean: primitiveEncodeAndDecodeOptions({
-		encode: (value: boolean) => value + '',
-		decode: (value: string | null) => value !== null && value !== 'false',
-	}),
-	string: primitiveEncodeAndDecodeOptions({
-		encode: (value: string | null) => value ?? '',
-		decode: (value: string | null) => value,
-	}),
-	object: objectEncodeAndDecodeOptions,
-	array: arrayEncodeAndDecodeOptions,
-	lz: lzEncodeAndDecodeOptions,
-} satisfies Record<
-	string,
-	<T = any>(defaultValue?: T) => EncodeAndDecodeOptions<T>
->;
-
 type SetTimeout = ReturnType<typeof setTimeout>;
 
 const batchedUpdates = new Set<(query: URLSearchParams) => void>();
 
-let batchTimeout: number;
+let batchTimeout: ReturnType<typeof setTimeout>;
 
 const debouncedTimeouts = new Map<string, SetTimeout>();
 
