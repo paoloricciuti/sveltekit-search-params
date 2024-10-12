@@ -2,4 +2,4 @@
 'sveltekit-search-params': minor
 ---
 
-Split out the ssp definitions
+chore: split out the ssp definitions
