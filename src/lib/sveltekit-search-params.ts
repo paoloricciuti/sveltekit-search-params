@@ -245,12 +245,12 @@ const DEFAULT_ENCODER_DECODER: EncodeAndDecodeOptions = {
 
 export function queryParam<T>(
 	name: string,
-	options: EncodeAndDecodeOptions<T> & { defaultValue: T },
+	options: Partial<EncodeAndDecodeOptions<T>> & { defaultValue: T },
 	storeOptions?: StoreOptions<T>,
 ): Writable<T>;
 export function queryParam<T = string>(
 	name: string,
-	options?: EncodeAndDecodeOptions<T>,
+	options?: Partial<EncodeAndDecodeOptions<T>>,
 	storeOptions?: StoreOptions<T>,
 ): Writable<T | null>;
 export function queryParam<T = string>(
@@ -259,7 +259,7 @@ export function queryParam<T = string>(
 		encode: encode = DEFAULT_ENCODER_DECODER.encode,
 		decode: decode = DEFAULT_ENCODER_DECODER.decode,
 		defaultValue,
-	}: EncodeAndDecodeOptions<T> = DEFAULT_ENCODER_DECODER,
+	}: Partial<EncodeAndDecodeOptions<T>> = DEFAULT_ENCODER_DECODER,
 	{
 		debounceHistory = 0,
 		pushHistory = true,
