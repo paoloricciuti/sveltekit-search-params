@@ -2,6 +2,7 @@
   import BrowserWindow from "./BrowserWindow.svelte";
   import "../assets/fonts.css";
   import { typewriter } from "svelte-typewriter-store";
+	import Demo from "./Demo.svelte";
   const store = typewriter(["pablopang", "rich_harris", "albert_einstein"], 30);
 </script>
 
@@ -35,6 +36,7 @@
   <code class="npm">npm i sveltekit-search-params -D</code>
 </div>
 <div class="wrapper">
+  <Demo />
   <BrowserWindow title="" url={`https://my.app?username=${$store}`}>
     <div class="content">
       <input readonly value={$store} /> <br />
