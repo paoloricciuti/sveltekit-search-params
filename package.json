@@ -2,6 +2,7 @@
 	"name": "sveltekit-search-params",
 	"version": "4.0.0-next.0",
 	"repository": {
+		"type": "git",
 		"url": "git+https://github.com/paoloricciuti/sveltekit-search-params.git"
 	},
 	"author": "Paolo Ricciuti",
