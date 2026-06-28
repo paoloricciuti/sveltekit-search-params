@@ -1,5 +1,23 @@
 # sveltekit-search-params
 
+## 4.0.0
+
+### Major Changes
+
+-   breaking: use app state instead of app store ([`dae9682`](https://github.com/paoloricciuti/sveltekit-search-params/commit/dae96826952064672bf894e9b956d3faed4c8db8))
+
+-   feat: upgrade to using runes ([#126](https://github.com/paoloricciuti/sveltekit-search-params/pull/126))
+
+### Patch Changes
+
+-   chore: update pre to start from v4 ([#128](https://github.com/paoloricciuti/sveltekit-search-params/pull/128))
+
+-   chore: fix changesets ([#132](https://github.com/paoloricciuti/sveltekit-search-params/pull/132))
+
+-   fix: trigger changesets ([`ebfaa5a`](https://github.com/paoloricciuti/sveltekit-search-params/commit/ebfaa5a00e6d19d499400624e41e33730ba4853a))
+
+-   fix: add `toJSON` to types ([`d50d1e1`](https://github.com/paoloricciuti/sveltekit-search-params/commit/d50d1e16d053f8850bb97128f6be62b0808898c0))
+
 ## 4.0.0-next.0
 
 ### Major Changes
