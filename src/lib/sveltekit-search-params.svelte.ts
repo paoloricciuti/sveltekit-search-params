@@ -1,21 +1,17 @@
 import { browser, building } from '$app/environment';
 import { goto } from '$app/navigation';
-import { page as page_store } from '$app/stores';
-import type { Page } from '@sveltejs/kit';
-import { fromStore, readable, type Readable } from 'svelte/store';
+import { page } from '$app/state';
 import type { EncodeAndDecodeOptions, NavigationOptions } from './types';
 export type { EncodeAndDecodeOptions, NavigationOptions };
 
-// during building we fake the page store with an URL with no search params
-// as it should be during prerendering. This allow the application to still build
-// and the client side behavior is still persisted after the build
-let page: Readable<Pick<Page, 'url'>>;
-if (building) {
-	page = readable({
-		url: new URL('http://example.com'),
-	});
-} else {
-	page = page_store;
+// during building we fake the page url with no search params as it should be
+// during prerendering. This allow the application to still build and the client
+// side behavior is still persisted after the build
+function get_page_url() {
+	if (building) {
+		return new URL('http://example.com');
+	}
+	return page.url;
 }
 
 function is_complex_equal<T>(
@@ -71,8 +67,6 @@ const batched_updates = new Set<(query: URLSearchParams) => void>();
 let batch_timeout: number;
 
 const debounced_timeouts = new Map<string, SetTimeout>();
-
-const page_state = fromStore(page);
 
 const DEFAULT_ENCODER_DECODER: EncodeAndDecodeOptions = {
 	encode: (value) => value.toString(),
@@ -240,7 +234,7 @@ function create_recursive_proxy<
 				const value =
 					cache[name as never] ??
 					(decodes.get(name) ?? DEFAULT_ENCODER_DECODER.decode)(
-						page_state.current.url.searchParams.get(name as never),
+						get_page_url().searchParams.get(name as never),
 					);
 				if (value != undefined && typeof value === 'object') {
 					return create_recursive_proxy(
@@ -355,7 +349,7 @@ export function queryParameters<
 		const der = $derived.by(() => {
 			const value =
 				overrides[key] ??
-				decode(page_state.current.url.searchParams.get(key));
+				decode(get_page_url().searchParams.get(key));
 			if (
 				!browser &&
 				should_default(
