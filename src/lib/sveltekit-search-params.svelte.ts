@@ -192,7 +192,10 @@ function create_recursive_proxy<
 	navigator?: ReturnType<typeof create_root_navigator>,
 ) {
 	return new Proxy<LooseAutocomplete<Options<T>>>(
-		target as LooseAutocomplete<Options<T>>,
+		target as LooseAutocomplete<Options<T>> & {
+			toJSON: () => Options<T>,
+			$parsed: () => Options<T>
+		},
 		{
 			get(target, name) {
 				// we use the RAW symbol to get the original target (this is currently not used but better have it)
@@ -227,6 +230,16 @@ function create_recursive_proxy<
 								(values as any)[key] = value;
 							}
 						}
+						return values;
+					};
+				}
+				// special case for JSON.stringify
+				if (name === '$parsed') {
+					return () => {
+						// snapshot the cache
+						const values = $state.snapshot(cache);
+						// on the server that's enough
+						if (!browser) return values;
 						return values;
 					};
 				}
@@ -320,7 +333,10 @@ export function queryParameters<
 >(
 	options?: T,
 	navigation_options: NavigationOptions = {},
-): LooseAutocomplete<Options<T>> {
+): LooseAutocomplete<Options<T>> & {
+	toJSON: () => Options<T>;
+	$parsed: () => Options<T>
+} {
 	const { showDefaults: show_defaults = true } = navigation_options;
 	// keeps all the deriveds for every single property
 	const cache: Partial<T> = {};
