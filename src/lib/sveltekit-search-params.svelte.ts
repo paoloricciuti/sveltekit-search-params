@@ -44,6 +44,8 @@ type LooseAutocomplete<T> = {
 	[K in keyof T]: T[K];
 } & {
 	[K: string]: string | null;
+} & {
+	toJSON: () => Record<string, string | null>;
 };
 
 type Options<T> = {
@@ -348,8 +350,7 @@ export function queryParameters<
 
 		const der = $derived.by(() => {
 			const value =
-				overrides[key] ??
-				decode(get_page_url().searchParams.get(key));
+				overrides[key] ?? decode(get_page_url().searchParams.get(key));
 			if (
 				!browser &&
 				should_default(
