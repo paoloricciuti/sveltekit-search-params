@@ -28,15 +28,13 @@ function is_complex_equal<T>(
 }
 
 const GOTO_OPTIONS = {
-	keepFocus: true,
-	noScroll: true,
-	replaceState: true,
+	reset: false,
+	replace: true,
 };
 
 const GOTO_OPTIONS_PUSH = {
-	keepFocus: true,
-	noScroll: true,
-	replaceState: false,
+	reset: false,
+	replace: false,
 };
 
 // type to get full autocomplete on T but also allow for any other string
