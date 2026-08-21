@@ -1,9 +1,18 @@
 import { VERSION } from '@sveltejs/kit';
-import { browser, building } from '$app/environment';
 import { goto } from '$app/navigation';
 import { page } from '$app/state';
 import type { EncodeAndDecodeOptions, NavigationOptions } from './types';
 export type { EncodeAndDecodeOptions, NavigationOptions };
+
+/**
+ * SvelteKit 3 changes the goto options.
+ * NOTE: Simplify the GOTO_OPTIONS once this library no longer supports SvelteKit 2.
+ */
+const is_sveltekit_2 = VERSION.startsWith('2.');
+
+const { browser, building } = await (is_sveltekit_2
+	? import('$app/environment')
+	: import('$app/env'));
 
 // during building we fake the page url with no search params as it should be
 // during prerendering. This allow the application to still build and the client
@@ -27,12 +36,6 @@ function is_complex_equal<T>(
 		equality_fn(current, next)
 	);
 }
-
-/**
- * SvelteKit 3 changes the goto options.
- * NOTE: Simplify the GOTO_OPTIONS once this library no longer supports SvelteKit 2.
- */
-const is_sveltekit_2 = VERSION.startsWith('2.');
 
 const GOTO_OPTIONS = is_sveltekit_2
 	? {
