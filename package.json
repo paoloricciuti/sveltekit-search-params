@@ -69,7 +69,7 @@
 	},
 	"type": "module",
 	"peerDependencies": {
-		"@sveltejs/kit": "^2.12.0",
+		"@sveltejs/kit": "^2.12.0 || >=3.0.0-next.24 || ^3.0.0",
 		"svelte": "^5.0.0"
 	},
 	"exports": {
