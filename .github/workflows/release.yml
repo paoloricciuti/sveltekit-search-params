@@ -29,7 +29,7 @@ jobs:
               id: changesets
               uses: changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d # v1.9.0
               with:
-                  publish: pnpm run publish
+                  publish: pnpm run release
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
                   NODE_OPTIONS: --trace-uncaught
