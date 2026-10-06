@@ -194,28 +194,31 @@ test.describe('queryParameters', () => {
 		await input.fill('str');
 		const str = page.getByTestId('str');
 		await expect(str).toHaveText('str');
-		const url = new URL(page.url());
-		expect(url.searchParams.get('str')).toBe('str');
+		await expect
+			.poll(() => new URL(page.url()).searchParams.get('str'))
+			.toBe('str');
 	});
 
 	test('works as expected with numbers', async ({ page }) => {
 		await page.goto('/queryparameters?num=0');
 		const btn = page.getByTestId('num');
 		await expect(btn).toHaveText('0');
-		btn.click();
+		await btn.click();
 		await expect(btn).toHaveText('1');
-		const url = new URL(page.url());
-		expect(url.searchParams.get('num')).toBe('1');
+		await expect
+			.poll(() => new URL(page.url()).searchParams.get('num'))
+			.toBe('1');
 	});
 
 	test('works as expected with bools', async ({ page }) => {
 		await page.goto('/queryparameters');
 		let input = page.getByTestId('bools');
 		await expect(input).not.toBeChecked();
-		input.click();
+		await input.click();
 		await expect(input).toBeChecked();
-		const url = new URL(page.url());
-		expect(url.searchParams.get('bools')).toBe('true');
+		await expect
+			.poll(() => new URL(page.url()).searchParams.get('bools'))
+			.toBe('true');
 		await page.goto('/queryparameters?bools=true');
 		input = page.getByTestId('bools');
 		await expect(input).toBeChecked();
@@ -233,23 +236,25 @@ test.describe('queryParameters', () => {
 		await input.fill('str');
 		const obj = page.getByTestId('obj');
 		await expect(obj).toHaveText('{"str":"str"}');
-		const url = new URL(page.url());
-		expect(url.searchParams.get('obj')).toBe('{"str":"str"}');
+		await expect
+			.poll(() => new URL(page.url()).searchParams.get('obj'))
+			.toBe('{"str":"str"}');
 	});
 
 	test('works as expected with array', async ({ page }) => {
 		await page.goto('/queryparameters');
 		const input = page.getByTestId('arr-input');
 		await input.click();
-		let arr = page.getByTestId('arr');
-		expect(await arr.count()).toBe(1);
-		let url = new URL(page.url());
-		expect(url.searchParams.get('arr')).toBe('[0]');
+		const arr = page.getByTestId('arr');
+		await expect(arr).toHaveCount(1);
+		await expect
+			.poll(() => new URL(page.url()).searchParams.get('arr'))
+			.toBe('[0]');
 		await input.click();
-		arr = page.getByTestId('arr');
-		expect(await arr.count()).toBe(2);
-		url = new URL(page.url());
-		expect(url.searchParams.get('arr')).toBe('[0,1]');
+		await expect(arr).toHaveCount(2);
+		await expect
+			.poll(() => new URL(page.url()).searchParams.get('arr'))
+			.toBe('[0,1]');
 	});
 
 	test('works as expected with lz', async ({ page }) => {
@@ -258,8 +263,9 @@ test.describe('queryParameters', () => {
 		await input.fill('lz');
 		const str = page.getByTestId('lz');
 		await expect(str).toHaveText('lz');
-		const url = new URL(page.url());
-		expect(url.searchParams.get('lz')).toBe('EQGwXsQ');
+		await expect
+			.poll(() => new URL(page.url()).searchParams.get('lz'))
+			.toBe('EQGwXsQ');
 	});
 
 	test("changes to the store doesn't trigger reactivity multiple times", async ({
@@ -281,9 +287,15 @@ test.describe('queryParameters', () => {
 		const input = page.getByTestId('lz-input');
 		await input.fill('lz changed');
 		await expect(str).toHaveText('lz changed');
-		const url = new URL(page.url());
-		expect(url.searchParams.get('lz')).toBe('EQGwXgBAxgFghgOwOYFMAmwg');
-		expect(url.searchParams.get('something')).toBe('else');
+		await expect
+			.poll(() => {
+				const url = new URL(page.url());
+				return {
+					lz: url.searchParams.get('lz'),
+					something: url.searchParams.get('something'),
+				};
+			})
+			.toEqual({ lz: 'EQGwXgBAxgFghgOwOYFMAmwg', something: 'else' });
 	});
 
 	test("changing one parameter doesn't interfere with the hash", async ({
@@ -294,9 +306,12 @@ test.describe('queryParameters', () => {
 		await input.fill('str');
 		const str = page.getByTestId('str');
 		await expect(str).toHaveText('str');
-		const url = new URL(page.url());
-		expect(url.searchParams.get('str')).toBe('str');
-		expect(url.hash).toBe('#test-hash');
+		await expect
+			.poll(() => {
+				const url = new URL(page.url());
+				return { str: url.searchParams.get('str'), hash: url.hash };
+			})
+			.toEqual({ str: 'str', hash: '#test-hash' });
 	});
 
 	test("changing two parameters in the same function doesn't negate", async ({
@@ -309,9 +324,15 @@ test.describe('queryParameters', () => {
 		const num = page.getByTestId('num');
 		await expect(str).toHaveText('one');
 		await expect(num).toHaveText('42');
-		const url = new URL(page.url());
-		expect(url.searchParams.get('str')).toBe('one');
-		expect(url.searchParams.get('num')).toBe('42');
+		await expect
+			.poll(() => {
+				const url = new URL(page.url());
+				return {
+					str: url.searchParams.get('str'),
+					num: url.searchParams.get('num'),
+				};
+			})
+			.toEqual({ str: 'one', num: '42' });
 	});
 
 	test('parameters are kept in alphabetical order by default', async ({
@@ -322,8 +343,9 @@ test.describe('queryParameters', () => {
 		const btn = page.getByTestId('num');
 		await btn.click();
 		await arr_btn.click();
-		const url = new URL(page.url());
-		expect(url.search).toBe('?arr=%5B0%5D&num=1');
+		await expect
+			.poll(() => new URL(page.url()).search)
+			.toBe('?arr=%5B0%5D&num=1');
 	});
 
 	test('parameters are not ordered if updated through a store that has specifically set sort to false', async ({
@@ -333,23 +355,24 @@ test.describe('queryParameters', () => {
 		const input = page.getByTestId('str-input');
 		const str = page.getByTestId('str');
 		await input.fill('str');
+		await expect
+			.poll(() => new URL(page.url()).searchParams.get('str'))
+			.toBe('str');
 		const btn = page.getByTestId('arr-unordered-input');
 		await btn.click();
 		const arr = page.getByTestId('arr-unordered');
-		expect(await arr.count()).toBe(1);
+		await expect(arr).toHaveCount(1);
 		await expect(str).toHaveText('str');
-		let url = new URL(page.url());
-		expect(url.searchParams.get('arr-unordered')).toBe('[0]');
-		expect(url.searchParams.get('str')).toBe('str');
-		expect(url.search).toBe('?str=str&arr-unordered=%5B0%5D');
+		await expect
+			.poll(() => new URL(page.url()).search)
+			.toBe('?str=str&arr-unordered=%5B0%5D');
 
 		// expect them to be ordered if you access an ordered store
 		await input.fill('string');
 		await expect(str).toHaveText('string');
-		url = new URL(page.url());
-		expect(url.searchParams.get('arr-unordered')).toBe('[0]');
-		expect(url.searchParams.get('str')).toBe('string');
-		expect(url.search).toBe('?arr-unordered=%5B0%5D&str=string');
+		await expect
+			.poll(() => new URL(page.url()).search)
+			.toBe('?arr-unordered=%5B0%5D&str=string');
 	});
 });
 
@@ -389,7 +412,10 @@ test.describe('default values', () => {
 	}) => {
 		await page.goto('/default/parameters-obj');
 		const input = page.locator('input');
-		input.fill('test');
+		await input.fill('test');
+		await expect
+			.poll(() => new URL(page.url()).searchParams.get('obj'))
+			.toBe('{"test":"test"}');
 		const link = page.locator('a');
 		await link.click();
 		await page.waitForURL(
