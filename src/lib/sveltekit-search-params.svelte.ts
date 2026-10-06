@@ -1,6 +1,7 @@
 import { VERSION } from '@sveltejs/kit';
 import { goto } from '$app/navigation';
 import { page } from '$app/state';
+import { BROWSER as browser } from 'esm-env';
 import type { EncodeAndDecodeOptions, NavigationOptions } from './types';
 export type { EncodeAndDecodeOptions, NavigationOptions };
 
@@ -10,18 +11,13 @@ export type { EncodeAndDecodeOptions, NavigationOptions };
  */
 const is_sveltekit_2 = VERSION.startsWith('2.');
 
-const { browser, building } = await (is_sveltekit_2
-	? import('$app/environment')
-	: import('$app/env'));
-
-// during building we fake the page url with no search params as it should be
-// during prerendering. This allow the application to still build and the client
-// side behavior is still persisted after the build
-function get_page_url() {
-	if (building) {
-		return new URL('http://example.com');
+// Search params may be unavailable during prerendering or outside component context.
+function get_page_url_params() {
+	try {
+		return page.url.searchParams;
+	} catch {
+		return new URLSearchParams();
 	}
-	return page.url;
 }
 
 function is_complex_equal<T>(
@@ -252,7 +248,7 @@ function create_recursive_proxy<
 				const value =
 					cache[name as never] ??
 					(decodes.get(name) ?? DEFAULT_ENCODER_DECODER.decode)(
-						get_page_url().searchParams.get(name as never),
+						get_page_url_params().get(name as never),
 					);
 				if (value != undefined && typeof value === 'object') {
 					return create_recursive_proxy(
@@ -366,7 +362,7 @@ export function queryParameters<
 
 		const der = $derived.by(() => {
 			const value =
-				overrides[key] ?? decode(get_page_url().searchParams.get(key));
+				overrides[key] ?? decode(get_page_url_params().get(key));
 			if (
 				!browser &&
 				should_default(

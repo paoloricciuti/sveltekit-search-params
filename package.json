@@ -89,5 +89,8 @@
 				"./package/sveltekit-search-params.d.ts"
 			]
 		}
+	},
+	"dependencies": {
+		"esm-env": "^1.2.2"
 	}
 }

@@ -7,6 +7,10 @@ settings:
 importers:
 
   .:
+    dependencies:
+      esm-env:
+        specifier: ^1.2.2
+        version: 1.2.2
     devDependencies:
       '@changesets/cli':
         specifier: ^2.27.9
