@@ -1,5 +1,13 @@
 # sveltekit-search-params
 
+## 4.0.1
+
+### Patch Changes
+
+-   fix: throw descriptive error if initializing params after first await ([`f0c9dfd`](https://github.com/paoloricciuti/sveltekit-search-params/commit/f0c9dfd4cb59a39a3019c30e23c94c6bc703e10d))
+
+-   fix: support SvelteKit 3 ([#201](https://github.com/paoloricciuti/sveltekit-search-params/pull/201))
+
 ## 4.0.0
 
 ### Major Changes
