@@ -11,11 +11,20 @@ export type { EncodeAndDecodeOptions, NavigationOptions };
  */
 const is_sveltekit_2 = VERSION.startsWith('2.');
 
-// Search params may be unavailable during prerendering or outside component context.
 function get_page_url_params() {
+	let url: typeof page.url;
 	try {
-		return page.url.searchParams;
+		url = page.url;
+	} catch (cause) {
+		throw new Error(
+			'sveltekit-search-params: Unable to access page.url. Move your queryParameters() definition and any initial read in a component before the first await.',
+			{ cause },
+		);
+	}
+	try {
+		return url.searchParams;
 	} catch {
+		// Search params are unavailable during prerendering.
 		return new URLSearchParams();
 	}
 }
