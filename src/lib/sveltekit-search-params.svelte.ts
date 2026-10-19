@@ -98,6 +98,9 @@ const DEFAULT_ENCODER_DECODER: EncodeAndDecodeOptions = {
 
 const RAW = Symbol('raw');
 
+// the latest write to each key, per queryParameters instance
+const latest_writes = new WeakMap<object, Map<string | symbol, symbol>>();
+
 function do_navigate(
 	name: string,
 	value: unknown,
@@ -109,6 +112,10 @@ function do_navigate(
 	if (!browser) return;
 	// set the overrides to have the value immediately
 	overrides[name] = value;
+	const write = Symbol();
+	const writes = latest_writes.get(overrides) ?? new Map();
+	latest_writes.set(overrides, writes);
+	writes.set(name, write);
 	const {
 		debounceHistory = 0,
 		pushHistory = true,
@@ -147,8 +154,11 @@ function do_navigate(
 					`?${query}${hash}`,
 					pushHistory ? GOTO_OPTIONS_PUSH : GOTO_OPTIONS,
 				);
-				// reset overrides here since navigation finished
-				overrides[name] = undefined;
+				// reset overrides here since navigation finished, unless a later write replaced this one
+				if (writes.get(name) === write) {
+					writes.delete(name);
+					overrides[name] = undefined;
+				}
 			}
 			// if debounce is 0 just call it immediately (not even waiting 0)
 			if (debounceHistory === 0) {

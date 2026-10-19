@@ -335,6 +335,20 @@ test.describe('queryParameters', () => {
 			.toEqual({ str: 'one', num: '42' });
 	});
 
+	test("typing while a slow navigation is in flight doesn't drop keystrokes", async ({
+		page,
+	}) => {
+		await page.goto('/slow-navigation');
+		const input = page.getByTestId('str-input');
+		// keep typing past the first superseded load, faster than each load resolves
+		await input.pressSequentially('abcdefghij', { delay: 100 });
+		await expect(input).toHaveValue('abcdefghij');
+		await expect
+			.poll(() => new URL(page.url()).searchParams.get('str'))
+			.toBe('abcdefghij');
+		await expect(input).toHaveValue('abcdefghij');
+	});
+
 	test('parameters are kept in alphabetical order by default', async ({
 		page,
 	}) => {
