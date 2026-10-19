@@ -214,6 +214,11 @@ function create_recursive_proxy<
 	path: string[] = [],
 	navigator?: ReturnType<typeof create_root_navigator>,
 ) {
+	// reading `toJSON` or an inherited property like `toString` never gives a parameter
+	const is_param = (name: string) =>
+		name !== 'toJSON' &&
+		(Object.hasOwn(cache, name) ||
+			(!(name in cache) && get_page_url_params().has(name)));
 	return new Proxy<LooseAutocomplete<Options<T>>>(
 		target as LooseAutocomplete<Options<T>>,
 		{
@@ -301,7 +306,45 @@ function create_recursive_proxy<
 			},
 			has(target, name) {
 				if (name === RAW) return true;
+				if (
+					path.length === 0 &&
+					typeof name === 'string' &&
+					is_param(name)
+				) {
+					return true;
+				}
 				return Reflect.has(target, name);
+			},
+			ownKeys(target) {
+				if (path.length !== 0) return Reflect.ownKeys(target);
+				const names = [
+					...Object.keys(cache),
+					...get_page_url_params().keys(),
+				];
+				return [...new Set(names.filter(is_param))];
+			},
+			getOwnPropertyDescriptor(target, name) {
+				if (path.length !== 0 || typeof name === 'symbol') {
+					return Reflect.getOwnPropertyDescriptor(target, name);
+				}
+				if (!is_param(name)) return undefined;
+				return {
+					value: this.get!(target, name, target),
+					enumerable: true,
+					configurable: true,
+					writable: true,
+				};
+			},
+			// a property on the target or a frozen target would tie ownKeys to the target's keys
+			defineProperty(target, name, descriptor) {
+				if (path.length !== 0) {
+					return Reflect.defineProperty(target, name, descriptor);
+				}
+				return false;
+			},
+			preventExtensions(target) {
+				if (path.length !== 0) return Reflect.preventExtensions(target);
+				return false;
 			},
 		},
 	);
