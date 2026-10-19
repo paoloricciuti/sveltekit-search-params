@@ -335,6 +335,23 @@ test.describe('queryParameters', () => {
 			.toEqual({ str: 'one', num: '42' });
 	});
 
+	test('changing two parameters in the same function updates both on history navigation', async ({
+		page,
+	}) => {
+		await page.goto('/queryparameters');
+		await page.getByTestId('change-two').click();
+		const str = page.getByTestId('str');
+		const num = page.getByTestId('num');
+		await expect(str).toHaveText('one');
+		await expect(num).toHaveText('42');
+		await expect
+			.poll(() => new URL(page.url()).searchParams.get('str'))
+			.toBe('one');
+		await page.goBack();
+		await expect(str).toHaveText('');
+		await expect(num).toHaveText('');
+	});
+
 	test("typing while a slow navigation is in flight doesn't drop keystrokes", async ({
 		page,
 	}) => {
