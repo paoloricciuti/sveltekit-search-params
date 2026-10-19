@@ -407,6 +407,32 @@ test.describe('default values', () => {
 		expect(url.searchParams.get('obj')).toBe('{"test":""}');
 	});
 
+	test("links update parameters whose default isn't shown", async ({
+		page,
+	}) => {
+		await page.goto('/default/link');
+		const str = page.getByTestId('str');
+		await expect(str).toHaveText('default');
+		await page.getByTestId('link').click();
+		await page.waitForURL(
+			(url) => url.searchParams.get('str') === 'from-link',
+		);
+		await expect(str).toHaveText('from-link');
+		await page.getByTestId('reset').click();
+		await page.waitForURL((url) => !url.searchParams.has('str'));
+		await expect(str).toHaveText('default');
+	});
+
+	test("writes into a value whose default isn't shown leave the default alone", async ({
+		page,
+	}) => {
+		await page.goto('/default/link');
+		await page.getByTestId('deep-write').click();
+		await expect(page.getByTestId('default-after-write')).toHaveText(
+			'{"inner":{"str":""}}',
+		);
+	});
+
 	test("default values for complex values doesn't get override on writes (queryParameters)", async ({
 		page,
 	}) => {
