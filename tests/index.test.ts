@@ -642,3 +642,33 @@ test.describe('original methods are accessible on the returned object', () => {
 		);
 	});
 });
+
+test.describe('enumerating the parameters', () => {
+	test('keys, spreading and snapshots include every parameter', async ({
+		page,
+	}) => {
+		await page.goto('/enumerate?num=1&extra=yes');
+		const keys = page.getByTestId('keys');
+		await expect(keys).toHaveText('num,str,extra');
+		const expected = JSON.stringify({
+			num: 1,
+			str: 'default',
+			extra: 'yes',
+		});
+		await expect(page.getByTestId('spread')).toHaveText(expected);
+		await expect(page.getByTestId('snapshot')).toHaveText(expected);
+		await expect(page.getByTestId('in')).toHaveText('true,true,false');
+		await page.getByTestId('link').click();
+		await expect(keys).toHaveText('num,str');
+	});
+
+	test("url keys named like the object's methods aren't parameters", async ({
+		page,
+	}) => {
+		await page.goto('/enumerate?toString=x&constructor=y&toJSON=z');
+		await expect(page.getByTestId('keys')).toHaveText('num,str');
+		await expect(page.getByTestId('spread')).toHaveText(
+			JSON.stringify({ num: null, str: 'default' }),
+		);
+	});
+});
