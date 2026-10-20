@@ -335,6 +335,37 @@ test.describe('queryParameters', () => {
 			.toEqual({ str: 'one', num: '42' });
 	});
 
+	test('changing two parameters in the same function updates both on history navigation', async ({
+		page,
+	}) => {
+		await page.goto('/queryparameters');
+		await page.getByTestId('change-two').click();
+		const str = page.getByTestId('str');
+		const num = page.getByTestId('num');
+		await expect(str).toHaveText('one');
+		await expect(num).toHaveText('42');
+		await expect
+			.poll(() => new URL(page.url()).searchParams.get('str'))
+			.toBe('one');
+		await page.goBack();
+		await expect(str).toHaveText('');
+		await expect(num).toHaveText('');
+	});
+
+	test("typing while a slow navigation is in flight doesn't drop keystrokes", async ({
+		page,
+	}) => {
+		await page.goto('/slow-navigation');
+		const input = page.getByTestId('str-input');
+		// keep typing past the first superseded load, faster than each load resolves
+		await input.pressSequentially('abcdefghij', { delay: 100 });
+		await expect(input).toHaveValue('abcdefghij');
+		await expect
+			.poll(() => new URL(page.url()).searchParams.get('str'))
+			.toBe('abcdefghij');
+		await expect(input).toHaveValue('abcdefghij');
+	});
+
 	test('parameters are kept in alphabetical order by default', async ({
 		page,
 	}) => {

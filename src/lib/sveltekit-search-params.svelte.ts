@@ -85,7 +85,12 @@ type Options<T> = {
 
 type SetTimeout = ReturnType<typeof setTimeout>;
 
-const batched_updates = new Set<(query: URLSearchParams) => void>();
+type BatchedUpdate = {
+	apply: (query: URLSearchParams) => void;
+	settle: () => void;
+};
+
+const batched_updates = new Set<BatchedUpdate>();
 
 let batch_timeout: number;
 
@@ -98,6 +103,9 @@ const DEFAULT_ENCODER_DECODER: EncodeAndDecodeOptions = {
 
 const RAW = Symbol('raw');
 
+// the latest write to each key, per queryParameters instance
+const latest_writes = new WeakMap<object, Map<string | symbol, symbol>>();
+
 function do_navigate(
 	name: string,
 	value: unknown,
@@ -109,6 +117,10 @@ function do_navigate(
 	if (!browser) return;
 	// set the overrides to have the value immediately
 	overrides[name] = value;
+	const write = Symbol();
+	const writes = latest_writes.get(overrides) ?? new Map();
+	latest_writes.set(overrides, writes);
+	writes.set(name, write);
 	const {
 		debounceHistory = 0,
 		pushHistory = true,
@@ -130,12 +142,22 @@ function do_navigate(
 			}
 		}
 	};
-	batched_updates.add(to_batch);
+	batched_updates.add({
+		apply: to_batch,
+		settle() {
+			// a navigation superseded by a later write must not clear that write's override
+			if (writes.get(name) === write) {
+				writes.delete(name);
+				overrides[name] = undefined;
+			}
+		},
+	});
 	clearTimeout(batch_timeout);
 	const query = new URLSearchParams(window.location.search);
 	batch_timeout = setTimeout(async () => {
-		batched_updates.forEach((batched) => {
-			batched(query);
+		const batch = [...batched_updates];
+		batch.forEach((batched) => {
+			batched.apply(query);
 		});
 		clearTimeout(debounced_timeouts.get(name));
 		if (browser) {
@@ -147,8 +169,10 @@ function do_navigate(
 					`?${query}${hash}`,
 					pushHistory ? GOTO_OPTIONS_PUSH : GOTO_OPTIONS,
 				);
-				// reset overrides here since navigation finished
-				overrides[name] = undefined;
+				// reset the overrides of every write in the batch since navigation finished
+				batch.forEach((batched) => {
+					batched.settle();
+				});
 			}
 			// if debounce is 0 just call it immediately (not even waiting 0)
 			if (debounceHistory === 0) {
