@@ -438,6 +438,110 @@ test.describe('default values', () => {
 		expect(url.searchParams.get('obj')).toBe('{"test":""}');
 	});
 
+	test("links update parameters whose default isn't shown", async ({
+		page,
+	}) => {
+		await page.goto('/default/link');
+		const str = page.getByTestId('str');
+		await expect(str).toHaveText('default');
+		await page.getByTestId('link').click();
+		await page.waitForURL(
+			(url) => url.searchParams.get('str') === 'from-link',
+		);
+		await expect(str).toHaveText('from-link');
+		await page.getByTestId('reset').click();
+		await page.waitForURL((url) => !url.searchParams.has('str'));
+		await expect(str).toHaveText('default');
+	});
+
+	test('hidden object defaults rerender on deep writes without changing caller defaults', async ({
+		page,
+	}) => {
+		await page.goto('/default/link');
+		await page.getByTestId('deep-write').click();
+		await expect(page.getByTestId('obj')).toHaveText(
+			'{"inner":{"str":"changed","arr":["initial"]}}',
+		);
+		await page.getByTestId('nested-push').click();
+		await expect(page.getByTestId('obj')).toHaveText(
+			'{"inner":{"str":"changed","arr":["initial","added"]}}',
+		);
+		await expect(page.getByTestId('default-after-write')).toHaveText(
+			'{"obj":{"inner":{"str":"","arr":["initial"]}},"arr":["initial"]}',
+		);
+	});
+
+	test('links and reset restore hidden complex defaults after mutation', async ({
+		page,
+	}) => {
+		await page.goto('/default/link');
+		await page.getByTestId('deep-write').click();
+		await expect(page.getByTestId('obj')).toContainText('changed');
+		await page.getByTestId('nested-push').click();
+		await expect(page.getByTestId('obj')).toContainText('added');
+		await page.getByTestId('link').click();
+		await expect(page.getByTestId('str')).toHaveText('from-link');
+		await expect(page.getByTestId('obj')).toHaveText(
+			'{"inner":{"str":"linked","arr":["linked"]}}',
+		);
+		await expect(page.getByTestId('arr')).toHaveText('["linked"]');
+		await page.getByTestId('reset').click();
+		await expect(page.getByTestId('query')).toHaveText('');
+		await expect(page.getByTestId('str')).toHaveText('default');
+		await expect(page.getByTestId('obj')).toHaveText(
+			'{"inner":{"str":"","arr":["initial"]}}',
+		);
+		await expect(page.getByTestId('arr')).toHaveText('["initial"]');
+		await page.getByTestId('observe-defaults').click();
+		await expect(page.getByTestId('default-after-write')).toHaveText(
+			'{"obj":{"inner":{"str":"","arr":["initial"]}},"arr":["initial"]}',
+		);
+	});
+
+	test('equal cached objects remain reactive after unrelated navigation', async ({
+		page,
+	}) => {
+		await page.goto('/default/link');
+		await page.getByTestId('link').click();
+		await expect(page.getByTestId('obj')).toHaveText(
+			'{"inner":{"str":"linked","arr":["linked"]}}',
+		);
+		await page.getByTestId('unrelated').click();
+		await expect(page.getByTestId('query')).toContainText('unrelated=1');
+		await page.getByTestId('deep-write').click();
+		await expect(page.getByTestId('obj')).toHaveText(
+			'{"inner":{"str":"changed","arr":["linked"]}}',
+		);
+		await page.getByTestId('nested-push').click();
+		await expect(page.getByTestId('obj')).toHaveText(
+			'{"inner":{"str":"changed","arr":["linked","added"]}}',
+		);
+	});
+
+	test('hidden object and array defaults support navigating writes without clone errors', async ({
+		page,
+	}) => {
+		const errors: Error[] = [];
+		page.on('pageerror', (error) => errors.push(error));
+		await page.goto('/default/link');
+		await page.getByTestId('direct-write').click();
+		await expect(page.getByTestId('obj')).toHaveText(
+			'{"inner":{"str":"direct","arr":["direct"]}}',
+		);
+		await expect
+			.poll(() => new URL(page.url()).searchParams.get('obj'))
+			.toBe('{"inner":{"str":"direct","arr":["direct"]}}');
+		await page.getByTestId('root-push').click();
+		await expect(page.getByTestId('arr')).toHaveText('["initial","added"]');
+		await expect
+			.poll(() => new URL(page.url()).searchParams.get('arr'))
+			.toBe('["initial","added"]');
+		await expect(page.getByTestId('default-after-write')).toHaveText(
+			'{"obj":{"inner":{"str":"","arr":["initial"]}},"arr":["initial"]}',
+		);
+		expect(errors).toEqual([]);
+	});
+
 	test("default values for complex values doesn't get override on writes (queryParameters)", async ({
 		page,
 	}) => {

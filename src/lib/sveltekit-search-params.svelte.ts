@@ -2,6 +2,7 @@ import { VERSION } from '@sveltejs/kit';
 import { goto } from '$app/navigation';
 import { page } from '$app/state';
 import { BROWSER as browser } from 'esm-env';
+import { untrack } from 'svelte';
 import type { EncodeAndDecodeOptions, NavigationOptions } from './types';
 export type { EncodeAndDecodeOptions, NavigationOptions };
 
@@ -188,6 +189,13 @@ function do_navigate(
 	});
 }
 
+function is_proxyable(value: unknown): value is object {
+	if (value == null || typeof value !== 'object') return false;
+	if (Array.isArray(value)) return true;
+	const prototype = Object.getPrototypeOf(value);
+	return prototype === Object.prototype || prototype === null;
+}
+
 /**
  * this is used for objects and arrays...when a property changes we actually
  * want to change the base parameter...this function is passed through the
@@ -202,7 +210,7 @@ function create_root_navigator(
 	return (_path: string[], key: string, to_set: unknown) => {
 		const path = [..._path];
 		const name = path.shift()!;
-		const value = structuredClone($state.snapshot(overrides[name]) ?? root);
+		const value = structuredClone($state.snapshot(overrides[name] ?? root));
 		let current = value;
 		for (const piece of path) {
 			current = current[piece as never];
@@ -332,34 +340,26 @@ function create_recursive_proxy<
 }
 
 /**
- * function to check if we should show the default and eventually navigate to update the url
+ * a plain default is copied for every use, so writes into the value never change the default itself
+ */
+function get_default(option: EncodeAndDecodeOptions) {
+	const default_value = option.defaultValue;
+	if (is_proxyable(default_value)) return $state.snapshot(default_value);
+	return default_value;
+}
+
+/**
+ * function to check if we should show the default instead of the value
  */
 function should_default(
 	value: unknown,
-	key: string,
 	option: boolean | EncodeAndDecodeOptions,
-	show_defaults: boolean,
-	encodes: Map<string | symbol, EncodeAndDecodeOptions['encode']>,
-	overrides: Record<string | symbol, unknown>,
-	navigation_options: NavigationOptions,
 ): option is EncodeAndDecodeOptions {
-	if (
+	return (
 		value == undefined &&
 		typeof option !== 'boolean' &&
 		option.defaultValue != undefined
-	) {
-		if (show_defaults) {
-			do_navigate(
-				key,
-				option.defaultValue,
-				encodes,
-				overrides,
-				navigation_options,
-			);
-		}
-		return true;
-	}
-	return false;
+	);
 }
 
 export function queryParameters<
@@ -393,32 +393,21 @@ export function queryParameters<
 		decodes.set(key, decode);
 		encodes.set(key, encode);
 
+		const raw = $derived(
+			overrides[key] ?? decode(get_page_url_params().get(key)),
+		);
+
 		const der = $derived.by(() => {
-			const value =
-				overrides[key] ?? decode(get_page_url_params().get(key));
-			if (
-				!browser &&
-				should_default(
-					value,
-					key,
-					options[key],
-					show_defaults,
-					encodes,
-					overrides,
-					navigation_options,
-				)
-			) {
-				// return the default value on the server (we can't set the override in $effect.pre
-				// because it only execute on the client and if we set overrides on the server is not
-				// actually reactive)
-				return options[key].defaultValue;
-			}
+			const value = should_default(raw, options[key])
+				? get_default(options[key])
+				: raw;
 			const old_value = old_values.get(key) ?? null;
-			// check if the old value is conceptually the same as the new, in case return the new value
+			// reuse the old value when it is conceptually the same as the new value
+			// Equality reads must not track edits to the cached value.
 			if (
 				is_complex_equal(
 					$state.snapshot(value),
-					$state.snapshot(old_value) as any,
+					untrack(() => $state.snapshot(old_value)) as any,
 					typeof options[key] === 'boolean'
 						? undefined
 						: options[key].equalityFn,
@@ -427,24 +416,21 @@ export function queryParameters<
 				return old_value;
 			}
 			// store the old value
-			old_values.set(key, $state.snapshot(value));
-			return value;
+			const reactive_value = $state($state.snapshot(value));
+			old_values.set(key, reactive_value);
+			return reactive_value;
 		});
 
 		$effect.pre(() => {
-			// override in case the param is null and we need to show the default
-			if (
-				should_default(
-					der,
+			// write the default to the url in case the param is null and we need to show it
+			if (show_defaults && should_default(raw, options[key])) {
+				do_navigate(
 					key,
-					options[key],
-					show_defaults,
+					get_default(options[key]),
 					encodes,
 					overrides,
 					navigation_options,
-				)
-			) {
-				overrides[key] = options[key].defaultValue;
+				);
 			}
 		});
 
