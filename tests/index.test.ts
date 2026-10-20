@@ -672,3 +672,38 @@ test.describe('enumerating the parameters', () => {
 		);
 	});
 });
+
+test.describe('nested writes', () => {
+	test('writes two levels deep update the url', async ({ page }) => {
+		await page.goto('/nested-writes');
+		await page.getByTestId('nested-input').fill('deep');
+		await expect
+			.poll(
+				() =>
+					JSON.parse(new URL(page.url()).searchParams.get('nested')!)
+						.inner,
+			)
+			.toEqual({ str: 'deep' });
+	});
+
+	test('array methods on a nested array update the url', async ({ page }) => {
+		await page.goto('/nested-writes');
+		const items = () =>
+			JSON.parse(new URL(page.url()).searchParams.get('nested')!).items;
+		await page.getByTestId('remove-1').click();
+		await expect.poll(items).toEqual([{ id: 2 }, { id: 3 }]);
+		await page.getByTestId('add').click();
+		await expect.poll(items).toEqual([{ id: 2 }, { id: 3 }, { id: 4 }]);
+		await expect(page.getByTestId('default-after-write')).toHaveText(
+			JSON.stringify({
+				inner: { str: '' },
+				items: [{ id: 1 }, { id: 2 }, { id: 3 }],
+			}),
+		);
+	});
+
+	test('a frozen default can be read', async ({ page }) => {
+		await page.goto('/nested-writes');
+		await expect(page.getByTestId('frozen')).toHaveText('frozen');
+	});
+});
