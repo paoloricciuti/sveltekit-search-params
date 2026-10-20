@@ -2,6 +2,7 @@ import { VERSION } from '@sveltejs/kit';
 import { goto } from '$app/navigation';
 import { page } from '$app/state';
 import { BROWSER as browser } from 'esm-env';
+import { untrack } from 'svelte';
 import type { EncodeAndDecodeOptions, NavigationOptions } from './types';
 export type { EncodeAndDecodeOptions, NavigationOptions };
 
@@ -185,7 +186,7 @@ function create_root_navigator(
 	return (_path: string[], key: string, to_set: unknown) => {
 		const path = [..._path];
 		const name = path.shift()!;
-		const value = structuredClone($state.snapshot(overrides[name]) ?? root);
+		const value = structuredClone($state.snapshot(overrides[name] ?? root));
 		let current = value;
 		for (const piece of path) {
 			current = current[piece as never];
@@ -377,11 +378,12 @@ export function queryParameters<
 				? get_default(options[key])
 				: raw;
 			const old_value = old_values.get(key) ?? null;
-			// check if the old value is conceptually the same as the new, in case return the new value
+			// reuse the old value when it is conceptually the same as the new value
+			// Equality reads must not track edits to the cached value.
 			if (
 				is_complex_equal(
 					$state.snapshot(value),
-					$state.snapshot(old_value) as any,
+					untrack(() => $state.snapshot(old_value)) as any,
 					typeof options[key] === 'boolean'
 						? undefined
 						: options[key].equalityFn,
@@ -390,8 +392,9 @@ export function queryParameters<
 				return old_value;
 			}
 			// store the old value
-			old_values.set(key, $state.snapshot(value));
-			return value;
+			const reactive_value = $state($state.snapshot(value));
+			old_values.set(key, reactive_value);
+			return reactive_value;
 		});
 
 		$effect.pre(() => {
