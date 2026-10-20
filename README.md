@@ -199,6 +199,14 @@ this will make the query parameter have the default value and the URL change as 
 >
 > You can't run `goto` on the server so if the page is server side rendered it will still have the default value but it will not actually navigate until the client bundle loads.
 
+### Class values
+
+`decode` can return an instance of a class, like a `Date` or a Temporal value. You get the instance as it is, so its methods work. Changing it in place doesn't update the URL, so assign a new value instead:
+
+```ts
+params.date = new Date('2030-01-01');
+```
+
 ### Helpers encodings and decodings
 
 Write an encode and decode function may seem trivial but it's tedious for sure. `sveltekit-search-params` provide with a set of helpers for better readability and to avoid the hassle of writing common transforms. You can find those helpers exported in a ssp variable from the same package.
