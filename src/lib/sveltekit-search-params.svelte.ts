@@ -189,6 +189,7 @@ function do_navigate(
 	});
 }
 
+// class instances aren't proxied, because private fields and built-ins like Date only work with the instance itself as `this`
 function is_proxyable(value: unknown): value is object {
 	if (value == null || typeof value !== 'object') return false;
 	if (Array.isArray(value)) return true;
@@ -296,7 +297,7 @@ function create_recursive_proxy<
 					(decodes.get(name) ?? DEFAULT_ENCODER_DECODER.decode)(
 						get_page_url_params().get(name as never),
 					);
-				if (value != undefined && typeof value === 'object') {
+				if (is_proxyable(value)) {
 					return create_recursive_proxy(
 						value,
 						cache,
@@ -444,6 +445,14 @@ export function queryParameters<
 			const value = should_default(raw, options[key])
 				? get_default(options[key])
 				: raw;
+			// a class instance's snapshot loses its prototype and private fields, so the instance is returned as it is
+			if (
+				value != null &&
+				typeof value === 'object' &&
+				!is_proxyable(value)
+			) {
+				return value;
+			}
 			const old_value = old_values.get(key) ?? null;
 			// reuse the old value when it is conceptually the same as the new value
 			// Equality reads must not track edits to the cached value.
