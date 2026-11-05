@@ -56,7 +56,7 @@
 		"globals": "^16.0.0",
 		"prettier": "^3.3.3",
 		"prettier-plugin-svelte": "^3.2.7",
-		"publint": "^0.2.12",
+		"publint": "^0.3.0",
 		"svelte": "^5.56.4",
 		"svelte-check": "^4.0.5",
 		"svelte-material-icons": "^3.0.5",
