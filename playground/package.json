@@ -16,7 +16,7 @@
 		"svelte": "^5.57.1",
 		"svelte-check": "^4.7.5",
 		"tslib": "^2.6.3",
-		"typescript": "^6.0.0",
+		"typescript": "^7.0.0",
 		"vite": "^8.1.0"
 	},
 	"type": "module",
