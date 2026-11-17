@@ -672,3 +672,26 @@ test.describe('enumerating the parameters', () => {
 		);
 	});
 });
+
+test.describe('class values', () => {
+	test('class instances keep their methods', async ({ page }) => {
+		await page.goto('/class-values?date=2026-01-02T03:04:05.000Z');
+		await expect(page.getByTestId('date')).toHaveText(
+			'2026-01-02T03:04:05.000Z',
+		);
+	});
+
+	test('class instances stay instances when another parameter changes', async ({
+		page,
+	}) => {
+		await page.goto('/class-values?counter=1');
+		await page.getByTestId('str-input').fill('changed');
+		await expect
+			.poll(() => new URL(page.url()).searchParams.get('str'))
+			.toBe('changed');
+		await expect(page.getByTestId('counter-is-instance')).toHaveText(
+			'true',
+		);
+		await expect(page.getByTestId('counter')).toHaveText('1');
+	});
+});
