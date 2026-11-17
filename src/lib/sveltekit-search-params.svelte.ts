@@ -238,6 +238,7 @@ function create_recursive_proxy<
 >(
 	target: unknown,
 	cache: Partial<T>,
+	proxies: WeakMap<object, Map<string, object>>,
 	decodes: Map<string | symbol, EncodeAndDecodeOptions['decode']>,
 	encodes: Map<string | symbol, EncodeAndDecodeOptions['encode']>,
 	overrides: Record<string | symbol, unknown>,
@@ -251,16 +252,60 @@ function create_recursive_proxy<
 		name !== 'toJSON' &&
 		(Object.hasOwn(cache, name) ||
 			(!(name in cache) && get_page_url_params().has(name)));
+	// one proxy per object and path, so reading the same value twice gives the same object
+	function get_proxy(value: object, name: string) {
+		const key = JSON.stringify([...path, name]);
+		let by_path = proxies.get(value);
+		if (!by_path) {
+			by_path = new Map();
+			proxies.set(value, by_path);
+		}
+		let proxy = by_path.get(key);
+		if (!proxy) {
+			proxy = create_recursive_proxy(
+				value,
+				cache,
+				proxies,
+				decodes,
+				encodes,
+				overrides,
+				old_values,
+				navigation_options,
+				[...path, name],
+				navigator ??
+					create_root_navigator(
+						value,
+						encodes,
+						overrides,
+						navigation_options,
+					),
+			);
+			by_path.set(key, proxy);
+		}
+		return proxy;
+	}
 	return new Proxy<LooseAutocomplete<Options<T>>>(
 		target as LooseAutocomplete<Options<T>>,
 		{
 			get(target, name) {
 				// we use the RAW symbol to get the original target (this is currently not used but better have it)
 				if (name === RAW) return target;
-				// if the path length is different from 0 we just return the actual value
-				// same if it's a symbol (this is svelte checking if we are state)
+				// if it's a symbol we just return the actual value (this is svelte checking if we are state)
 				const reflected_value = Reflect.get(target, name);
-				if (typeof name === 'symbol' || path.length !== 0) {
+				if (typeof name === 'symbol') {
+					return reflected_value;
+				}
+				// below the root we proxy nested objects and arrays too, so writes at any depth navigate
+				if (path.length !== 0) {
+					// a proxy can't stand in for a read-only, non-configurable property (like a frozen object's)
+					const { writable = true, configurable = true } =
+						Reflect.getOwnPropertyDescriptor(target, name) ?? {};
+					if (
+						is_proxyable(reflected_value) &&
+						(writable || configurable)
+					) {
+						return get_proxy(reflected_value, name);
+					}
 					return reflected_value;
 				}
 
@@ -297,23 +342,7 @@ function create_recursive_proxy<
 						get_page_url_params().get(name as never),
 					);
 				if (value != undefined && typeof value === 'object') {
-					return create_recursive_proxy(
-						value,
-						cache,
-						decodes,
-						encodes,
-						overrides,
-						old_values,
-						navigation_options,
-						[...path, name],
-						navigator ??
-							create_root_navigator(
-								value,
-								encodes,
-								overrides,
-								navigation_options,
-							),
-					);
+					return get_proxy(value, name);
 				}
 				return value;
 			},
@@ -487,6 +516,7 @@ export function queryParameters<
 	return create_recursive_proxy(
 		{},
 		cache,
+		new WeakMap(),
 		decodes,
 		encodes,
 		overrides,
