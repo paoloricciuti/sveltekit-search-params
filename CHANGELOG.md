@@ -1,5 +1,17 @@
 # sveltekit-search-params
 
+## 4.0.2
+
+### Patch Changes
+
+-   fix: let links change parameters whose default isn't shown ([#208](https://github.com/paoloricciuti/sveltekit-search-params/pull/208))
+
+-   fix: every parameter written in the same tick follows the url again once navigation finishes ([#206](https://github.com/paoloricciuti/sveltekit-search-params/pull/206))
+
+-   fix: let spreading, Object.keys and $state.snapshot see the parameters ([#213](https://github.com/paoloricciuti/sveltekit-search-params/pull/213))
+
+-   fix: don't let a superseded navigation reset a parameter written after it ([#206](https://github.com/paoloricciuti/sveltekit-search-params/pull/206))
+
 ## 4.0.1
 
 ### Patch Changes
