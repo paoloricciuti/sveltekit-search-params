@@ -366,6 +366,41 @@ test.describe('queryParameters', () => {
 		await expect(input).toHaveValue('abcdefghij');
 	});
 
+	test('a parameter written while another navigation is in flight keeps the earlier write', async ({
+		page,
+	}) => {
+		await page.goto('/slow-navigation');
+		const input = page.getByTestId('str-input');
+		await input.fill('a');
+		// written after the first navigation started and before its load resolves
+		await page.waitForTimeout(50);
+		await page.getByTestId('num-input').click();
+		await expect
+			.poll(() => new URL(page.url()).search)
+			.toBe('?num=1&str=a');
+		await expect(input).toHaveValue('a');
+		await expect(page.getByTestId('num')).toHaveText('1');
+	});
+
+	test('a parameter written while another navigation is in flight keeps showing the earlier write', async ({
+		page,
+	}) => {
+		await page.goto('/slow-navigation');
+		const input = page.getByTestId('str-input');
+		await input.fill('a');
+		await page.waitForTimeout(50);
+		await page.getByTestId('num-input').click();
+		// sample until both writes are in the URL, so the gap after the first navigation is seen
+		const shown: string[] = [];
+		await expect
+			.poll(async () => {
+				shown.push(await input.inputValue());
+				return new URL(page.url()).search;
+			})
+			.toBe('?num=1&str=a');
+		expect(shown.filter((value) => value !== 'a')).toEqual([]);
+	});
+
 	test('parameters are kept in alphabetical order by default', async ({
 		page,
 	}) => {
