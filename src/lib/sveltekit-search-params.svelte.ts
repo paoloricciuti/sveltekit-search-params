@@ -93,6 +93,17 @@ type BatchedUpdate = {
 
 const batched_updates = new Set<BatchedUpdate>();
 
+type SentBatch = {
+	// the search params the batch was built from, and the ones it navigates to
+	from: string;
+	search: string;
+	updates: BatchedUpdate[];
+	// set once a later batch carries these updates, which then settles them
+	carried: boolean;
+};
+
+let last_batch: SentBatch | null = null;
+
 let batch_timeout: number;
 
 const debounced_timeouts = new Map<string, SetTimeout>();
@@ -154,26 +165,43 @@ function do_navigate(
 		},
 	});
 	clearTimeout(batch_timeout);
-	const query = new URLSearchParams(window.location.search);
 	batch_timeout = setTimeout(async () => {
-		const batch = [...batched_updates];
-		batch.forEach((batched) => {
+		// while the last batch hasn't landed, the url lacks its writes, so build on top of them
+		const in_flight =
+			last_batch && last_batch.from === window.location.search
+				? last_batch
+				: null;
+		if (in_flight) in_flight.carried = true;
+		const query = new URLSearchParams(
+			in_flight?.search ?? window.location.search,
+		);
+		batched_updates.forEach((batched) => {
 			batched.apply(query);
 		});
+		if (sort) {
+			query.sort();
+		}
+		const batch: SentBatch = {
+			from: window.location.search,
+			search: `?${query}`,
+			updates: [...(in_flight?.updates ?? []), ...batched_updates],
+			carried: false,
+		};
+		last_batch = batch;
 		clearTimeout(debounced_timeouts.get(name));
 		if (browser) {
 			async function navigate() {
-				if (sort) {
-					query.sort();
-				}
 				await goto(
-					`?${query}${hash}`,
+					`${batch.search}${hash}`,
 					pushHistory ? GOTO_OPTIONS_PUSH : GOTO_OPTIONS,
 				);
-				// reset the overrides of every write in the batch since navigation finished
-				batch.forEach((batched) => {
-					batched.settle();
-				});
+				if (last_batch === batch) last_batch = null;
+				// a batch that a later one carries may not have landed, so the later one settles its writes
+				if (!batch.carried) {
+					batch.updates.forEach((batched) => {
+						batched.settle();
+					});
+				}
 			}
 			// if debounce is 0 just call it immediately (not even waiting 0)
 			if (debounceHistory === 0) {
